@@ -1,43 +1,176 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import background from "../assets/sp1.jpg";
+import Navbar from "../components/Navbar";
 import "./style.css";
 
 function Home() {
+  const [isLoggedIn, setIsLoggedIn] =
+    useState(
+      !!localStorage.getItem("accessToken")
+    );
+
+  // ========================================
+  // CHECK LOGIN STATUS
+  // ========================================
+
+  useEffect(() => {
+    const checkLogin = () => {
+      const token =
+        localStorage.getItem("accessToken");
+
+      const user =
+        localStorage.getItem("user");
+
+      setIsLoggedIn(
+        !!token && !!user
+      );
+    };
+
+    checkLogin();
+
+    // Listen for storage changes
+    window.addEventListener(
+      "storage",
+      checkLogin
+    );
+
+    // Custom logout event
+    window.addEventListener(
+      "authChanged",
+      checkLogin
+    );
+
+    return () => {
+      window.removeEventListener(
+        "storage",
+        checkLogin
+      );
+
+      window.removeEventListener(
+        "authChanged",
+        checkLogin
+      );
+    };
+  }, []);
+
   return (
-    <div
-      className="home-container"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        backgroundImage: `url(${background})`,
-      }}
-    >
-      <h1>Welcome to Product App</h1>
+    <>
+      {/* ========================================
+          LOGGED IN
+          SHOW NAVBAR
+      ======================================== */}
 
-      <p style={{ fontSize: "1.25rem", textAlign: "center", color: "white" }}>
-        Manage your products easily.
-      </p>
+      {isLoggedIn && <Navbar />}
 
-      <div style={{ display: "flex", gap: "10px" }}>
-        <Link to="/add-product">
-          <button
+      <div
+        className="home-container"
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+
+          minHeight: isLoggedIn
+            ? "calc(100vh - 70px)"
+            : "100vh",
+
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        {/* ========================================
+            LOGGED OUT
+            SHOW LOGIN & SIGNUP
+        ======================================== */}
+
+        {!isLoggedIn && (
+          <div
             style={{
-              backgroundColor: "#da1f07",
-              color: "white",
-              padding: "10px 20px",
-              border: "none",
-              borderRadius: "20px",
-              cursor: "pointer",
+              position: "absolute",
+              top: "20px",
+              right: "30px",
+              display: "flex",
+              gap: "10px",
             }}
           >
-            Add Product
-          </button>
-        </Link>
+            {/* LOGIN */}
 
-        <Link to="/products">
+            <Link
+              to="/login"
+              style={{
+                textDecoration: "none",
+              }}
+            >
+              <button
+                style={{
+                  backgroundColor: "red",
+                  color: "white",
+                  padding: "10px 20px",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "15px",
+                }}
+              >
+                Login
+              </button>
+            </Link>
+
+            {/* SIGNUP */}
+
+            <Link
+              to="/signup"
+              style={{
+                textDecoration: "none",
+              }}
+            >
+              <button
+                style={{
+                  backgroundColor: "red",
+                  color: "white",
+                  padding: "10px 20px",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "15px",
+                }}
+              >
+                Signup
+              </button>
+            </Link>
+          </div>
+        )}
+
+        {/* ========================================
+            MAIN CONTENT
+        ======================================== */}
+
+        <h1>
+          Welcome to Product App
+        </h1>
+
+        <p
+          style={{
+            fontSize: "1.25rem",
+            textAlign: "center",
+            color: "white",
+          }}
+        >
+          Manage your products easily.
+        </p>
+
+        {/* ========================================
+            VIEW PRODUCTS
+        ======================================== */}
+
+        <Link
+          to="/products"
+          style={{
+            textDecoration: "none",
+          }}
+        >
           <button
             style={{
               backgroundColor: "#ec0d0d",
@@ -52,7 +185,7 @@ function Home() {
           </button>
         </Link>
       </div>
-    </div>
+    </>
   );
 }
 
