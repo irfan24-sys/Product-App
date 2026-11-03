@@ -1,8 +1,6 @@
 import api from "./api";
 
-// ========================================
 // AUTH CONFIG
-// ========================================
 
 const getAuthConfig = () => {
   const token =
@@ -15,9 +13,7 @@ const getAuthConfig = () => {
   };
 };
 
-// ========================================
 // GET SELLER PRODUCTS
-// ========================================
 
 export const getSellerProducts = async () => {
   try {
@@ -38,9 +34,7 @@ export const getSellerProducts = async () => {
   }
 };
 
-// ========================================
 // DELETE SELLER PRODUCT
-// ========================================
 
 export const deleteSellerProduct = async (
   id

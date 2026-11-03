@@ -55,10 +55,8 @@ function Home() {
 
   return (
     <>
-      {/* ========================================
-          LOGGED IN
-          SHOW NAVBAR
-      ======================================== */}
+      {/* LOGGED IN
+          SHOW NAVBAR    */}
 
       {isLoggedIn && <Navbar />}
 
@@ -80,10 +78,8 @@ function Home() {
           backgroundRepeat: "no-repeat",
         }}
       >
-        {/* ========================================
-            LOGGED OUT
-            SHOW LOGIN & SIGNUP
-        ======================================== */}
+        {/*  LOGGED OUT
+            SHOW LOGIN & SIGNUP*/}
 
         {!isLoggedIn && (
           <div
@@ -143,9 +139,7 @@ function Home() {
           </div>
         )}
 
-        {/* ========================================
-            MAIN CONTENT
-        ======================================== */}
+        {/*  MAIN CONTENT */}
 
         <h1>
           Welcome to Product App
@@ -161,9 +155,7 @@ function Home() {
           Manage your products easily.
         </p>
 
-        {/* ========================================
-            VIEW PRODUCTS
-        ======================================== */}
+        {/* VIEW PRODUCTS */}
 
         <Link
           to="/products"

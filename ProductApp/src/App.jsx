@@ -13,7 +13,7 @@ import Home from "./pages/home";
 import AddProduct from "./pages/Addproduct";
 import Products from "./pages/products";
 import EachItem from "./pages/eachItem";
-import Login from "./pages/Login";
+import Login from "./pages/login";
 import Signup from "./pages/Signup";
 import SellerDashboard from "./pages/sellerdash";
 import Cart from "./pages/Cart";

@@ -1,4 +1,3 @@
-
 import api from "./api";
 
 // SIGNUP API
@@ -7,10 +6,7 @@ export const signupUser = async (userData) => {
     const response = await api.post("/auth/signup", userData);
     return response.data;
   } catch (error) {
-    console.error(
-      "Signup API Error:",
-      error.response?.data || error.message
-    );
+    console.error("Signup API Error:", error.response?.data || error.message);
 
     throw error;
   }
@@ -22,10 +18,7 @@ export const loginUser = async (userData) => {
     const response = await api.post("/auth/login", userData);
     return response.data;
   } catch (error) {
-    console.error(
-      "Login API Error:",
-      error.response?.data || error.message
-    );
+    console.error("Login API Error:", error.response?.data || error.message);
 
     throw error;
   }

@@ -1,17 +1,12 @@
-
 import api from "./api";
 
-// ========================================
 // AUTH CONFIG
-// ========================================
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("accessToken");
 
   if (!token) {
-    throw new Error(
-      "Access token not found. Please login again."
-    );
+    throw new Error("Access token not found. Please login again.");
   }
 
   return {
@@ -21,7 +16,6 @@ const getAuthConfig = () => {
   };
 };
 
-// ========================================
 // GET ALL PRODUCTS
 //
 // PUBLIC API
@@ -29,176 +23,120 @@ const getAuthConfig = () => {
 // Logged out -> products visible
 // User       -> products visible
 // Seller     -> backend can hide own products
-// ========================================
 
-export const getProducts = async (
-  page = 1,
-  limit = 8
-) => {
+export const getProducts = async (page = 1, limit = 8) => {
   try {
     const response = await api.get(
-      `/product/getAllProduct?page=${page}&limit=${limit}`
+      `/product/getAllProduct?page=${page}&limit=${limit}`,
     );
 
-    console.log(
-      "Get Products Response:",
-      response.data
-    );
+    console.log("Get Products Response:", response.data);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Get Products Error:",
-      error.response?.data ||
-        error.message
-    );
+    console.error("Get Products Error:", error.response?.data || error.message);
 
     throw error;
   }
 };
 
-// ========================================
 // GET SINGLE PRODUCT
 //
 // PUBLIC API
 //
 // No login required
-// ========================================
 
 export const getProduct = async (id) => {
   try {
     if (!id) {
-      throw new Error(
-        "Product ID is required."
-      );
+      throw new Error("Product ID is required.");
     }
 
-    const response = await api.get(
-      `/product/getProduct/${id}`
-    );
+    const response = await api.get(`/product/getProduct/${id}`);
 
-    console.log(
-      "Get Single Product Response:",
-      response.data
-    );
+    console.log("Get Single Product Response:", response.data);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Get Product Error:",
-      error.response?.data ||
-        error.message
-    );
+    console.error("Get Product Error:", error.response?.data || error.message);
 
     throw error;
   }
 };
 
-// ========================================
 // ADD PRODUCT
-//
-// LOGIN REQUIRED
-// ========================================
 
-export const addProduct = async (
-  productData
-) => {
+// LOGIN REQUIRED
+
+export const addProduct = async (productData) => {
   try {
     const response = await api.post(
       "/product/addProduct",
       productData,
-      getAuthConfig()
+      getAuthConfig(),
     );
 
-    console.log(
-      "Add Product Response:",
-      response.data
-    );
+    console.log("Add Product Response:", response.data);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Add Product Error:",
-      error.response?.data ||
-        error.message
-    );
+    console.error("Add Product Error:", error.response?.data || error.message);
 
     throw error;
   }
 };
 
-// ========================================
 // UPDATE PRODUCT
-//
-// LOGIN REQUIRED
-// ========================================
 
-export const updateProduct = async (
-  id,
-  productData
-) => {
+// LOGIN REQUIRED
+
+export const updateProduct = async (id, productData) => {
   try {
     if (!id) {
-      throw new Error(
-        "Product ID is required."
-      );
+      throw new Error("Product ID is required.");
     }
 
     const response = await api.put(
       `/product/updateProduct/${id}`,
       productData,
-      getAuthConfig()
+      getAuthConfig(),
     );
 
-    console.log(
-      "Update Product Response:",
-      response.data
-    );
+    console.log("Update Product Response:", response.data);
 
     return response.data;
   } catch (error) {
     console.error(
       "Update Product Error:",
-      error.response?.data ||
-        error.message
+      error.response?.data || error.message,
     );
 
     throw error;
   }
 };
 
-// ========================================
 // DELETE PRODUCT
-//
-// LOGIN REQUIRED
-// ========================================
 
-export const deleteProduct = async (
-  id
-) => {
+// LOGIN REQUIRED
+
+export const deleteProduct = async (id) => {
   try {
     if (!id) {
-      throw new Error(
-        "Product ID is required."
-      );
+      throw new Error("Product ID is required.");
     }
 
     const response = await api.delete(
       `/product/deleteProduct/${id}`,
-      getAuthConfig()
+      getAuthConfig(),
     );
 
-    console.log(
-      "Delete Product Response:",
-      response.data
-    );
+    console.log("Delete Product Response:", response.data);
 
     return response.data;
   } catch (error) {
     console.error(
       "Delete Product Error:",
-      error.response?.data ||
-        error.message
+      error.response?.data || error.message,
     );
 
     throw error;

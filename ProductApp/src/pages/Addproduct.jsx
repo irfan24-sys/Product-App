@@ -5,11 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "react-toastify";
 
-import {
-  addProduct,
-  updateProduct,
-  getProduct,
-} from "../api/productApi";
+import { addProduct, updateProduct, getProduct } from "../api/productApi";
 
 import Navbar from "../components/Navbar";
 
@@ -28,7 +24,7 @@ const productSchema = yup.object({
   price: yup
     .number()
     .transform((value, originalValue) =>
-      originalValue === "" || originalValue == null ? NaN : value
+      originalValue === "" || originalValue == null ? NaN : value,
     )
     .typeError("Price is required and must be a valid number")
     .required("Price is required")
@@ -65,7 +61,7 @@ function AddProduct() {
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [saving, setSaving] = useState(false);
   const [screenWidth, setScreenWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1024
+    typeof window !== "undefined" ? window.innerWidth : 1024,
   );
 
   const isMobile = screenWidth <= 600;
@@ -117,7 +113,8 @@ function AddProduct() {
         setLoadingProduct(true);
 
         const response = await getProduct(productId);
-        const product = response?.data?.data || response?.data || response?.product;
+        const product =
+          response?.data?.data || response?.data || response?.product;
 
         if (!product) {
           toast.error("Product not found");
@@ -137,14 +134,9 @@ function AddProduct() {
           description: product.description || "",
         });
       } catch (error) {
-        console.error(
-          "Get product error:",
-          error.response?.data || error
-        );
+        console.error("Get product error:", error.response?.data || error);
 
-        toast.error(
-          error.response?.data?.message || "Failed to load product"
-        );
+        toast.error(error.response?.data?.message || "Failed to load product");
       } finally {
         if (isMounted) setLoadingProduct(false);
       }
@@ -179,14 +171,10 @@ function AddProduct() {
 
       if (isEditMode) {
         response = await updateProduct(productId, productData);
-        toast.success(
-          response?.message || "Product updated successfully!"
-        );
+        toast.success(response?.message || "Product updated successfully!");
       } else {
         response = await addProduct(productData);
-        toast.success(
-          response?.message || "Product added successfully!"
-        );
+        toast.success(response?.message || "Product added successfully!");
       }
 
       console.log("Product save response:", response);
@@ -195,10 +183,7 @@ function AddProduct() {
         navigate("/seller-dashboard");
       }, 1000);
     } catch (error) {
-      console.error(
-        "Product error:",
-        error.response?.data || error
-      );
+      console.error("Product error:", error.response?.data || error);
 
       const responseData = error.response?.data;
 
@@ -223,7 +208,7 @@ function AddProduct() {
         toast.error(
           responseData.errors[0]?.message ||
             responseData.errors[0]?.msg ||
-            "Please check the product details."
+            "Please check the product details.",
         );
         return;
       }
@@ -232,7 +217,7 @@ function AddProduct() {
         responseData?.message ||
           responseData?.error ||
           error.message ||
-          "Something went wrong. Please try again."
+          "Something went wrong. Please try again.",
       );
     } finally {
       setSaving(false);
@@ -246,9 +231,8 @@ function AddProduct() {
   const getInputStyle = (field) => ({
     display: "block",
     width: "100%",
-    minHeight: field === "description"
-      ? (isMobile ? "100px" : "120px")
-      : "42px",
+    minHeight:
+      field === "description" ? (isMobile ? "100px" : "120px") : "42px",
     padding: isMobile ? "9px" : "10px",
     boxSizing: "border-box",
     border: errors[field] ? "1px solid #dc2626" : "1px solid #ccc",
@@ -281,9 +265,7 @@ function AddProduct() {
     width: "100%",
   };
 
-  // ========================================
   // LOADING PRODUCT
-  // ========================================
 
   if (isEditMode && loadingProduct) {
     return (
@@ -306,9 +288,7 @@ function AddProduct() {
     );
   }
 
-  // ========================================
   // FORM UI
-  // ========================================
 
   return (
     <>
@@ -419,9 +399,7 @@ function AddProduct() {
             <select
               id="category"
               aria-invalid={Boolean(errors.category)}
-              aria-describedby={
-                errors.category ? "category-error" : undefined
-              }
+              aria-describedby={errors.category ? "category-error" : undefined}
               style={getInputStyle("category")}
               {...register("category")}
             >

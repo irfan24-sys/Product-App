@@ -25,9 +25,7 @@ function SellerDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 8;
 
-  // ========================================
   // GET SELLER PRODUCTS
-  // ========================================
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -61,9 +59,7 @@ function SellerDashboard() {
     fetchProducts();
   }, []);
 
-  // ========================================
   // PAGINATION CALCULATIONS
-  // ========================================
 
   // Search across all products belonging to this seller
   const filteredProducts = products.filter((product) => {
@@ -92,9 +88,7 @@ function SellerDashboard() {
     startIndex + productsPerPage
   );
 
-  // ========================================
   // DELETE MODAL
-  // ========================================
 
   const openDeleteModal = (id) => {
     setSelectedProductId(id);
@@ -108,9 +102,7 @@ function SellerDashboard() {
     setShowModal(false);
   };
 
-  // ========================================
   // CONFIRM DELETE
-  // ========================================
 
   const confirmDelete = async () => {
     if (!selectedProductId || deleting) return;
@@ -153,17 +145,13 @@ function SellerDashboard() {
     }
   };
 
-  // ========================================
   // EDIT PRODUCT
-  // ========================================
 
   const handleEdit = (id) => {
     navigate(`/add-product?id=${id}`);
   };
 
-  // ========================================
   // LOADING SCREEN
-  // ========================================
 
   if (loading) {
     return (
@@ -185,9 +173,8 @@ function SellerDashboard() {
     );
   }
 
-  // ========================================
   // MAIN DASHBOARD
-  // ========================================
+
 
   return (
     <>
@@ -201,9 +188,7 @@ function SellerDashboard() {
           boxSizing: "border-box",
         }}
       >
-        {/* ========================================
-            HEADER
-        ======================================== */}
+        {/* HEADER*/}
 
         <div
           style={{
@@ -316,9 +301,7 @@ function SellerDashboard() {
           </div>
         )}
 
-        {/* ========================================
-            NO PRODUCTS / SEARCH RESULTS
-        ======================================== */}
+        {/*  NO PRODUCTS / SEARCH RESULTS */}
 
         {products.length === 0 ? (
           <div
@@ -400,9 +383,6 @@ function SellerDashboard() {
               {" "}of {filteredProducts.length} product(s)
             </p>
 
-            {/* ========================================
-                PRODUCTS GRID
-            ======================================== */}
 
             <div
               style={{
@@ -529,9 +509,7 @@ function SellerDashboard() {
               ))}
             </div>
 
-            {/* ========================================
-                PAGINATION
-            ======================================== */}
+            {/* PAGINATION */}
 
             {totalPages > 1 && (
               <div
@@ -653,9 +631,7 @@ function SellerDashboard() {
         )}
       </div>
 
-      {/* ========================================
-          DELETE CONFIRMATION MODAL
-      ======================================== */}
+      {/*  DELETE CONFIRMATION MODAL*/}
 
       {showModal && (
         <div

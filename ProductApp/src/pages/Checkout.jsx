@@ -29,9 +29,7 @@ const emptyAddress = {
 };
 
 function Checkout() {
-  // ========================================
   // STATES
-  // ========================================
 
   const [cart, setCart] = useState([]);
 
@@ -74,9 +72,7 @@ function Checkout() {
     setNotice(String(message || "Something went wrong. Please try again."));
   };
 
-  // ========================================
   // LOAD CART
-  // ========================================
 
   useEffect(() => {
     try {
@@ -101,9 +97,8 @@ function Checkout() {
     }
   }, []);
 
-  // ========================================
   // LOAD ADDRESSES
-  // ========================================
+  
 
   useEffect(() => {
     loadAddresses();
@@ -147,18 +142,14 @@ function Checkout() {
     }
   };
 
-  // ========================================
   // RESET ADDRESS FORM
-  // ========================================
 
   const resetAddressForm = () => {
     resetAddress(emptyAddress);
     setEditingAddress(null);
   };
 
-  // ========================================
   // OPEN ADD ADDRESS MODAL
-  // ========================================
 
   const handleAddAddress = () => {
     resetAddressForm();
@@ -166,9 +157,7 @@ function Checkout() {
     setShowAddressModal(true);
   };
 
-  // ========================================
   // OPEN EDIT ADDRESS MODAL
-  // ========================================
 
   const handleEditAddress = (
     address,
@@ -193,9 +182,7 @@ function Checkout() {
     setShowAddressModal(true);
   };
 
-  // ========================================
   // CLOSE ADDRESS MODAL
-  // ========================================
 
   const closeAddressModal = () => {
     setShowAddressModal(false);
@@ -203,9 +190,7 @@ function Checkout() {
     resetAddressForm();
   };
 
-  // ========================================
   // SAVE ADDRESS
-  // ========================================
 
   const handleSaveAddress = async (formData) => {
     if (savingAddress) return;
@@ -265,9 +250,7 @@ function Checkout() {
     }
   };
 
-  // ========================================
   // SELECT ADDRESS
-  // ========================================
 
   const handleSelectAddress = (
     address
@@ -275,9 +258,7 @@ function Checkout() {
     setSelectedAddress(address);
   };
 
-  // ========================================
   // CONFIRM ADDRESS
-  // ========================================
 
   const handleConfirmAddress = (
     address,
@@ -294,9 +275,7 @@ function Checkout() {
     );
   };
 
-  // ========================================
   // TOTAL ITEMS
-  // ========================================
 
   const totalItems =
     cart.reduce(
@@ -307,10 +286,7 @@ function Checkout() {
         ),
       0
     );
-
-  // ========================================
   // TOTAL PRICE
-  // ========================================
 
   const total =
     cart.reduce(
@@ -325,9 +301,7 @@ function Checkout() {
       0
     );
 
-  // ========================================
   // PLACE ORDER
-  // ========================================
 
 const handlePlaceOrder = async () => {
   if (!selectedAddress) {
@@ -398,9 +372,7 @@ const handlePlaceOrder = async () => {
   }
 };
 
-  // ========================================
   // EMPTY CART
-  // ========================================
 
   if (
     cart.length === 0 &&
@@ -462,9 +434,7 @@ const handlePlaceOrder = async () => {
     );
   }
 
-  // ========================================
   // ORDER SUCCESS
-  // ========================================
 
   if (orderSuccess) {
     return (
@@ -524,9 +494,7 @@ const handlePlaceOrder = async () => {
     );
   }
 
-  // ========================================
   // MAIN CHECKOUT
-  // ========================================
 
   return (
     <>
@@ -555,21 +523,15 @@ const handlePlaceOrder = async () => {
             </div>
           </div>
 
-          {/* ========================================
-              MAIN GRID
-          ======================================== */}
+          {/*  MAIN GRID*/}
 
           <div className="checkout-grid">
 
-            {/* ========================================
-                LEFT COLUMN
-            ======================================== */}
+            {/*  LEFT COLUMN */}
 
             <div className="checkout-left">
 
-              {/* ========================================
-                  ADDRESS SECTION
-              ======================================== */}
+              {/* ADDRESS SECTION*/}
 
               <section className="checkout-card">
 
@@ -781,9 +743,7 @@ const handlePlaceOrder = async () => {
 
               </section>
 
-              {/* ========================================
-                  ORDER SUMMARY
-              ======================================== */}
+              {/* ORDER SUMMARY */}
 
               <section className="checkout-card">
 
@@ -886,9 +846,7 @@ const handlePlaceOrder = async () => {
 
               </section>
 
-              {/* ========================================
-                  PAYMENT METHOD
-              ======================================== */}
+              {/*  PAYMENT METHOD*/}
 
               <section className="checkout-card">
 
@@ -1016,10 +974,8 @@ const handlePlaceOrder = async () => {
 
             </div>
 
-            {/* ========================================
-                RIGHT COLUMN
-                PRODUCT DETAILS
-            ======================================== */}
+            {/* RIGHT COLUMN
+                PRODUCT DETAILS*/}
 
             <div className="checkout-right">
 
@@ -1156,9 +1112,7 @@ const handlePlaceOrder = async () => {
         </div>
       </div>
 
-      {/* ========================================
-          ADDRESS MODAL
-      ======================================== */}
+      {/* ADDRESS MODAL*/}
 
       {showAddressModal && (
         <div
@@ -1421,9 +1375,8 @@ const handlePlaceOrder = async () => {
   );
 }
 
-// ========================================
 // ALL CHECKOUT STYLES
-// ========================================
+
 
 function CheckoutStyles() {
   return (
@@ -1434,9 +1387,7 @@ function CheckoutStyles() {
           box-sizing: border-box;
         }
 
-        /* ========================================
-           CHECKOUT PAGE
-        ======================================== */
+       
 
         .checkout-page {
           min-height: calc(100vh - 70px);
@@ -1472,9 +1423,7 @@ function CheckoutStyles() {
           color: #777;
         }
 
-        /* ========================================
-           MAIN GRID
-        ======================================== */
+      
 
         .checkout-grid {
           display: grid;
@@ -1494,9 +1443,7 @@ function CheckoutStyles() {
           top: 20px;
         }
 
-        /* ========================================
-           GENERAL CARDS
-        ======================================== */
+       
 
         .checkout-card,
         .product-card {
@@ -1552,9 +1499,7 @@ function CheckoutStyles() {
           font-size: 13px;
         }
 
-        /* ========================================
-           ADD ADDRESS BUTTON
-        ======================================== */
+       
 
         .add-address-btn {
           display: inline-flex;
@@ -1581,10 +1526,7 @@ function CheckoutStyles() {
           line-height: 12px;
         }
 
-        /* ========================================
-           ADDRESS LIST
-        ======================================== */
-
+    
         .address-list {
           padding: 20px 25px 25px;
           display: flex;
@@ -1734,9 +1676,7 @@ function CheckoutStyles() {
           background: #e1e7e5;
         }
 
-        /* ========================================
-           NO ADDRESS
-        ======================================== */
+        
 
         .no-address {
           padding: 45px 25px;
@@ -1757,10 +1697,7 @@ function CheckoutStyles() {
           margin: 7px 0 18px;
         }
 
-        /* ========================================
-           ORDER SUMMARY
-        ======================================== */
-
+        
         .simple-header {
           border-bottom: 1px solid #eeeeee;
         }
@@ -1858,9 +1795,7 @@ function CheckoutStyles() {
           color: #198754;
         }
 
-        /* ========================================
-           PAYMENT
-        ======================================== */
+        /*  PAYMENT */
 
         .payment-list {
           padding: 20px 25px 25px;
@@ -1937,9 +1872,7 @@ function CheckoutStyles() {
           font-weight: 900;
         }
 
-        /* ========================================
-           PRODUCTS
-        ======================================== */
+        /* PRODUCTS */
 
         .product-header {
           padding: 25px;
@@ -2085,9 +2018,7 @@ function CheckoutStyles() {
           font-size: 21px;
         }
 
-        /* ========================================
-           ADDRESS MODAL
-        ======================================== */
+        /* ADDRESS MODAL */
 
         .modal-overlay {
           position: fixed;
@@ -2266,9 +2197,7 @@ function CheckoutStyles() {
           background: #157347;
         }
 
-        /* ========================================
-           EMPTY CART
-        ======================================== */
+        /* EMPTY CART */
 
         .empty-cart-page,
         .success-page {
@@ -2334,9 +2263,7 @@ function CheckoutStyles() {
           font-weight: 700;
         }
 
-        /* ========================================
-           LOADING
-        ======================================== */
+        /* LOADING */
 
         .loading-spinner {
           width: 18px;
@@ -2353,9 +2280,7 @@ function CheckoutStyles() {
           }
         }
 
-        /* ========================================
-           RESPONSIVE
-        ======================================== */
+        /* RESPONSIVE */
 
         @media (max-width: 900px) {
           .checkout-grid {
@@ -2467,9 +2392,7 @@ function CheckoutStyles() {
         }
 
 
-        /* ========================================
-           POLISHED ADDRESS MODAL OVERRIDES
-        ======================================== */
+        /* POLISHED ADDRESS MODAL OVERRIDES */
 
         .modal-overlay {
           padding: clamp(12px, 3vw, 28px);
@@ -2770,9 +2693,7 @@ function CheckoutStyles() {
         }
 
 
-        /* ========================================
-           CUSTOM NOTICE MODAL — replaces browser alerts
-        ======================================== */
+        /* CUSTOM NOTICE MODAL — replaces browser alerts*/
         .notice-overlay {
           position: fixed;
           inset: 0;

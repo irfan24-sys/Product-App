@@ -24,9 +24,7 @@ function Products({ products = [], setProducts }) {
   const limit = 8;
   const CART_KEY = "cart";
 
-  // ========================================
   // CHECK LOGIN STATUS
-  // ========================================
 
   const isLoggedIn = () => {
     const accessToken = localStorage.getItem("accessToken");
@@ -45,9 +43,7 @@ function Products({ products = [], setProducts }) {
     }
   };
 
-  // ========================================
   // GET CART
-  // ========================================
 
   const getCart = () => {
     try {
@@ -66,9 +62,7 @@ function Products({ products = [], setProducts }) {
     }
   };
 
-  // ========================================
   // CHECK PRODUCT IN CART
-  // ========================================
 
   const isProductInCart = (productId) => {
     const cart = getCart();
@@ -78,12 +72,10 @@ function Products({ products = [], setProducts }) {
     );
   };
 
-  // ========================================
   // FETCH ALL PRODUCTS
   // Fetch every backend page once so search can find products
   // across the complete product list. Pagination is handled
   // on the frontend with 8 products per page.
-  // ========================================
 
   useEffect(() => {
     let isMounted = true;
@@ -152,9 +144,7 @@ function Products({ products = [], setProducts }) {
     };
   }, [setProducts]);
 
-  // ========================================
   // ADD TO CART
-  // ========================================
 
   const handleAddToCart = (e, product) => {
     e.stopPropagation();
@@ -226,9 +216,7 @@ setTimeout(() => {
     }
   };
 
-  // ========================================
   // CART BUTTON CLICK
-  // ========================================
 
   const handleCartButtonClick = (e, product) => {
     e.stopPropagation();
@@ -249,9 +237,7 @@ setTimeout(() => {
     handleAddToCart(e, product);
   };
 
-  // ========================================
   // PRODUCT CARD CLICK
-  // ========================================
 
   const handleProductClick = (product) => {
     if (!product?._id) {
@@ -262,11 +248,9 @@ setTimeout(() => {
     navigate(`/each-item/${product._id}`);
   };
 
-  // ========================================
   // SEARCH PRODUCTS
   // Search across ALL products fetched from the backend.
   // While searching, show every matching product and hide pagination.
-  // ========================================
 
   const filteredProducts = products.filter((product) => {
     const search = searchTerm.trim().toLowerCase();
@@ -295,9 +279,7 @@ setTimeout(() => {
     page * limit
   );
 
-  // ========================================
   // LOADING
-  // ========================================
 
   if (loading) {
     return (
@@ -320,9 +302,7 @@ setTimeout(() => {
     );
   }
 
-  // ========================================
   // ERROR
-  // ========================================
 
   if (error) {
     return (
@@ -345,9 +325,8 @@ setTimeout(() => {
     );
   }
 
-  // ========================================
+  
   // PRODUCTS PAGE
-  // ========================================
 
   return (
     <>
@@ -647,9 +626,7 @@ setTimeout(() => {
         )}
       </div>
 
-      {/* ========================================
-          LOGIN REQUIRED MODAL
-      ======================================== */}
+      {/* LOGIN REQUIRED MODAL */}
 
       {showLoginModal && (
         <div

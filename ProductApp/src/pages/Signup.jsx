@@ -7,9 +7,7 @@ import * as yup from "yup";
 import { toast } from "react-toastify";
 import { signupUser } from "../api/authApi";
 
-// =====================================
 // YUP VALIDATION SCHEMA
-// =====================================
 const signupSchema = yup.object({
   firstName: yup
     .string()
@@ -38,9 +36,7 @@ const signupSchema = yup.object({
     .required("Please select a role"),
 });
 
-// =====================================
 // BACKEND ERROR MESSAGE HANDLER
-// =====================================
 const getErrorMessage = (data) => {
   if (!data) {
     return "Something went wrong. Please try again.";
@@ -67,9 +63,7 @@ const getErrorMessage = (data) => {
   return data.message || "Signup failed. Please try again.";
 };
 
-// =====================================
 // SIGNUP COMPONENT
-// =====================================
 function Signup() {
   const navigate = useNavigate();
 
@@ -92,17 +86,13 @@ function Signup() {
     },
   });
 
-  // =====================================
   // CLOSE ERROR MODAL
-  // =====================================
   const closeErrorModal = () => {
     setShowErrorModal(false);
     setErrorMessage("");
   };
 
-  // =====================================
   // HANDLE SIGNUP
-  // =====================================
  
 const handleSignup = async (formData) => {
   try {
@@ -168,9 +158,7 @@ const handleSignup = async (formData) => {
   }
 };
 
-  // =====================================
   // STYLES
-  // =====================================
   const inputStyle = {
     width: "100%",
     padding: "12px",

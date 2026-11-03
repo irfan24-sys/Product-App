@@ -7,9 +7,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-// =====================================
 // YUP VALIDATION SCHEMA
-// =====================================
 
 const loginSchema = yup.object({
   email: yup
@@ -23,9 +21,7 @@ const loginSchema = yup.object({
     .required("Password is required"),
 });
 
-// =====================================
 // LOGIN COMPONENT
-// =====================================
 
 function Login() {
   const navigate = useNavigate();
@@ -47,19 +43,14 @@ function Login() {
     },
   });
 
-  // =====================================
   // SHOW ERROR MODAL
-  // =====================================
 
   const showLoginError = (message) => {
     setErrorMessage(message);
     setShowErrorModal(true);
   };
 
-  // =====================================
   // LOGIN FUNCTION
-  // =====================================
-
   const handleLogin = async (formData) => {
     setShowErrorModal(false);
     setErrorMessage("");
@@ -96,9 +87,7 @@ function Login() {
       const userId = user._id;
       const role = user.role;
 
-      // =====================================
       // SAVE LOGIN INFORMATION
-      // =====================================
 
       localStorage.setItem("accessToken", response.accessToken);
 
@@ -122,9 +111,7 @@ function Login() {
       // Remove old shared cart
       localStorage.removeItem("cart");
 
-      // =====================================
       // REDIRECT BASED ON DATABASE ROLE
-      // =====================================
 
       if (role === "seller") {
         navigate("/seller-dashboard", {
@@ -169,9 +156,7 @@ function Login() {
     }
   };
 
-  // =====================================
   // STYLES
-  // =====================================
 
   const inputStyle = {
     width: "100%",
@@ -197,10 +182,6 @@ function Login() {
     marginTop: "5px",
     marginBottom: 0,
   };
-
-  // =====================================
-  // JSX
-  // =====================================
 
   return (
     <div

@@ -102,7 +102,9 @@ function Navbar() {
           <Link to="/products" style={linkStyle}>
             Products
           </Link>
-          <Link to="/my-orders" style={linkStyle}>My Orders</Link>
+          <Link to="/my-orders" style={linkStyle}>
+            My Orders
+          </Link>
 
           {/* Seller options */}
           {isSeller && (
@@ -124,17 +126,11 @@ function Navbar() {
 
           {/* Login / Logout */}
           {isLoggedIn ? (
-            <button
-              onClick={handleLogoutClick}
-              style={logoutButtonStyle}
-            >
+            <button onClick={handleLogoutClick} style={logoutButtonStyle}>
               Logout
             </button>
           ) : (
-            <button
-              onClick={handleLogin}
-              style={loginButtonStyle}
-            >
+            <button onClick={handleLogin} style={loginButtonStyle}>
               Login
             </button>
           )}
@@ -221,17 +217,11 @@ function Navbar() {
                 flexWrap: "wrap",
               }}
             >
-              <button
-                onClick={handleCancelLogout}
-                style={cancelButtonStyle}
-              >
+              <button onClick={handleCancelLogout} style={cancelButtonStyle}>
                 Cancel
               </button>
 
-              <button
-                onClick={handleConfirmLogout}
-                style={logoutButtonStyle}
-              >
+              <button onClick={handleConfirmLogout} style={logoutButtonStyle}>
                 Yes, Logout
               </button>
             </div>

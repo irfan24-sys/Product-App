@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -10,9 +9,7 @@ function Cart() {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // ========================================
   // LOAD CART
-  // ========================================
 
   useEffect(() => {
     try {
@@ -26,18 +23,14 @@ function Cart() {
     }
   }, []);
 
-  // ========================================
   // UPDATE CART
-  // ========================================
 
   const updateCart = (updatedCart) => {
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  // ========================================
   // INCREASE QUANTITY
-  // ========================================
 
   const increaseQuantity = (id) => {
     const updatedCart = cart.map((item) => {
@@ -54,9 +47,7 @@ function Cart() {
     updateCart(updatedCart);
   };
 
-  // ========================================
   // DECREASE QUANTITY
-  // ========================================
 
   const decreaseQuantity = (id) => {
     const updatedCart = cart
@@ -75,34 +66,27 @@ function Cart() {
     updateCart(updatedCart);
   };
 
-  // ========================================
   // OPEN REMOVE CONFIRMATION MODAL
-  // ========================================
 
   const handleRemoveClick = (item) => {
     setSelectedProduct(item);
     setShowRemoveModal(true);
   };
 
-  // ========================================
   // CANCEL REMOVE
-  // ========================================
 
   const handleCancelRemove = () => {
     setShowRemoveModal(false);
     setSelectedProduct(null);
   };
 
-  // ========================================
   // CONFIRM REMOVE PRODUCT
-  // ========================================
 
   const handleConfirmRemove = () => {
     if (!selectedProduct) return;
 
     const updatedCart = cart.filter(
-      (item) =>
-        String(item._id) !== String(selectedProduct._id)
+      (item) => String(item._id) !== String(selectedProduct._id),
     );
 
     updateCart(updatedCart);
@@ -110,26 +94,19 @@ function Cart() {
     setSelectedProduct(null);
   };
 
-  // ========================================
   // TOTAL
-  // ========================================
 
   const total = cart.reduce(
-    (sum, item) =>
-      sum +
-      Number(item.price || 0) *
-        Number(item.quantity || 0),
-    0
+    (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
+    0,
   );
 
   const totalItems = cart.reduce(
     (sum, item) => sum + Number(item.quantity || 0),
-    0
+    0,
   );
 
-  // ========================================
   // EMPTY CART
-  // ========================================
 
   if (cart.length === 0) {
     return (
@@ -160,9 +137,7 @@ function Cart() {
               boxSizing: "border-box",
             }}
           >
-            <h1 style={{ marginBottom: "12px" }}>
-              Your Cart is Empty
-            </h1>
+            <h1 style={{ marginBottom: "12px" }}>Your Cart is Empty</h1>
 
             <p
               style={{
@@ -195,9 +170,7 @@ function Cart() {
     );
   }
 
-  // ========================================
   // CART PAGE
-  // ========================================
 
   return (
     <>
@@ -220,9 +193,7 @@ function Cart() {
           {/* HEADER */}
 
           <div style={{ marginBottom: "30px" }}>
-            <h1 style={{ margin: "0 0 8px" }}>
-              Shopping Cart
-            </h1>
+            <h1 style={{ margin: "0 0 8px" }}>Shopping Cart</h1>
 
             <p style={{ color: "#777", margin: 0 }}>
               Review your selected products
@@ -338,8 +309,7 @@ function Cart() {
                     <strong>
                       ₹
                       {(
-                        Number(item.price || 0) *
-                        Number(item.quantity || 0)
+                        Number(item.price || 0) * Number(item.quantity || 0)
                       ).toFixed(2)}
                     </strong>
                   </div>
@@ -413,9 +383,7 @@ function Cart() {
               >
                 <span>Total</span>
 
-                <span style={{ color: "#198754" }}>
-                  ₹{total.toFixed(2)}
-                </span>
+                <span style={{ color: "#198754" }}>₹{total.toFixed(2)}</span>
               </div>
 
               {/* CHECKOUT */}
@@ -464,9 +432,7 @@ function Cart() {
         </div>
       </div>
 
-      {/* ========================================
-          REMOVE CONFIRMATION MODAL
-      ======================================== */}
+      {/* REMOVE CONFIRMATION MODAL */}
 
       {showRemoveModal && selectedProduct && (
         <div
@@ -538,8 +504,7 @@ function Cart() {
                 margin: "0 0 10px",
               }}
             >
-              Are you sure you want to remove this product from
-              your cart?
+              Are you sure you want to remove this product from your cart?
             </p>
 
             <p
@@ -604,9 +569,7 @@ function Cart() {
   );
 }
 
-// ========================================
 // REUSABLE QUANTITY BUTTON STYLE
-// ========================================
 
 const quantityButtonStyle = {
   width: "36px",

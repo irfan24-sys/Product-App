@@ -1,8 +1,6 @@
 import api from "./api";
 
-// ========================================
 // AUTH CONFIG
-// ========================================
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("accessToken");
@@ -20,9 +18,7 @@ const getAuthConfig = () => {
   };
 };
 
-// ========================================
 // ADD ADDRESS
-// ========================================
 
 export const addAddress = async (addressData) => {
   try {
@@ -45,9 +41,7 @@ export const addAddress = async (addressData) => {
   }
 };
 
-// ========================================
 // GET ADDRESSES
-// ========================================
 
 export const getAddresses = async () => {
   try {
@@ -72,9 +66,7 @@ export const getAddresses = async () => {
   }
 };
 
-// ========================================
 // UPDATE ADDRESS
-// ========================================
 
 export const updateAddress = async (
   id,
@@ -98,9 +90,7 @@ export const updateAddress = async (
   }
 };
 
-// ========================================
 // DELETE ADDRESS
-// ========================================
 
 export const deleteAddress = async (id) => {
   try {
