@@ -7,36 +7,24 @@ import * as yup from "yup";
 import { toast } from "react-toastify";
 import { signupUser } from "../api/authApi";
 
-// YUP VALIDATION SCHEMA
 const signupSchema = yup.object({
-  firstName: yup
-    .string()
-    .trim()
-    .required("First name is required"),
-
-  lastName: yup
-    .string()
-    .trim()
-    .required("Last name is required"),
-
+  firstName: yup.string().trim().required("First name is required"),
+  lastName: yup.string().trim().required("Last name is required"),
   email: yup
     .string()
     .trim()
     .email("Enter a valid email address")
     .required("Email is required"),
-
   password: yup
     .string()
     .min(6, "Password must contain at least 6 characters")
     .required("Password is required"),
-
   role: yup
     .string()
     .oneOf(["user", "seller"], "Please select a valid role")
     .required("Please select a role"),
 });
 
-// BACKEND ERROR MESSAGE HANDLER
 const getErrorMessage = (data) => {
   if (!data) {
     return "Something went wrong. Please try again.";
@@ -47,11 +35,8 @@ const getErrorMessage = (data) => {
       .map((item) => {
         if (typeof item === "string") return item;
 
-        const field =
-          item.path || item.param || item.field || "";
-
-        const message =
-          item.msg || item.message || item.error || "";
+        const field = item.path || item.param || item.field || "";
+        const message = item.msg || item.message || item.error || "";
 
         return field && message
           ? `${field}: ${message}`
@@ -63,12 +48,12 @@ const getErrorMessage = (data) => {
   return data.message || "Signup failed. Please try again.";
 };
 
-// SIGNUP COMPONENT
 function Signup() {
   const navigate = useNavigate();
 
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -76,7 +61,6 @@ function Signup() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(signupSchema),
-
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -86,315 +70,551 @@ function Signup() {
     },
   });
 
-  // CLOSE ERROR MODAL
   const closeErrorModal = () => {
     setShowErrorModal(false);
     setErrorMessage("");
   };
 
-  // HANDLE SIGNUP
- 
-const handleSignup = async (formData) => {
-  try {
-    const response = await signupUser({
-      firstName: formData.firstName.trim(),
-      lastName: formData.lastName.trim(),
-      email: formData.email.trim().toLowerCase(),
-      password: formData.password,
-      role: formData.role,
-    });
+  const handleSignup = async (formData) => {
+    try {
+      const response = await signupUser({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        role: formData.role,
+      });
 
-    console.log("Signup Response:", response);
+      console.log("Signup Response:", response);
 
-    // Check successful response
-    if (response?.success === true) {
-      // Save token
-      localStorage.setItem(
-        "accessToken",
-        response.accessToken
-      );
+      if (response?.success === true) {
+        localStorage.setItem("accessToken", response.accessToken);
+        localStorage.setItem("user", JSON.stringify(response.data));
 
-      // Save user details
-      localStorage.setItem(
-        "user",
-        JSON.stringify(response.data)
-      );
+        setShowErrorModal(false);
+        setErrorMessage("");
 
-      // No error modal on successful signup
-      setShowErrorModal(false);
-      setErrorMessage("");
+        toast.success("Signup successful!");
 
-      toast.success("Signup successful!");
+        if (response.data.role === "seller") {
+          navigate("/seller-dashboard", { replace: true });
+        } else if (response.data.role === "user") {
+          navigate("/products", { replace: true });
+        }
 
-      // Navigate based on registered role
-      if (response.data.role === "seller") {
-        navigate("/seller-dashboard", { replace: true });
-      } else if (response.data.role === "user") {
-        navigate("/products", { replace: true });
+        return;
       }
 
-      return;
+      setErrorMessage(getErrorMessage(response));
+      setShowErrorModal(true);
+    } catch (error) {
+      console.error("Signup Error:", error);
+
+      const backendData = error.response?.data;
+
+      console.log("Status:", error.response?.status);
+      console.log("Backend Response:", backendData);
+
+      setErrorMessage(getErrorMessage(backendData));
+      setShowErrorModal(true);
     }
-
-    // Show error only when signup fails
-    setErrorMessage(
-      getErrorMessage(response)
-    );
-    setShowErrorModal(true);
-
-  } catch (error) {
-    console.error("Signup Error:", error);
-
-    const backendData = error.response?.data;
-
-    console.log("Status:", error.response?.status);
-    console.log("Backend Response:", backendData);
-
-    setErrorMessage(
-      getErrorMessage(backendData)
-    );
-
-    setShowErrorModal(true);
-  }
-};
-
-  // STYLES
-  const inputStyle = {
-    width: "100%",
-    padding: "12px",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-    fontSize: "15px",
-    outline: "none",
-    boxSizing: "border-box",
   };
 
-  const labelStyle = {
-    display: "block",
-    marginBottom: "8px",
-    fontSize: "15px",
-    fontWeight: "500",
-    color: "#333",
+  const styles = {
+    page: {
+      minHeight: "100vh",
+      width: "100%",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: "30px 18px",
+      boxSizing: "border-box",
+      background: "linear-gradient(135deg, #FFF8F4, #F3E5DE)",
+      fontFamily: "Poppins, Arial, sans-serif",
+    },
+
+    card: {
+      width: "100%",
+      maxWidth: "1050px",
+      display: "grid",
+      gridTemplateColumns: "0.85fr 1.15fr",
+      background: "#FFFFFF",
+      borderRadius: "24px",
+      overflow: "hidden",
+      boxShadow: "0 22px 65px rgba(65, 38, 27, 0.13)",
+    },
+
+    left: {
+      position: "relative",
+      overflow: "hidden",
+      padding: "45px",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      color: "#FFFFFF",
+      background: "linear-gradient(145deg, #C16B4F, #813D2C)",
+      boxSizing: "border-box",
+    },
+
+    logo: {
+      fontSize: "27px",
+      fontWeight: "800",
+      letterSpacing: "1px",
+      margin: 0,
+      position: "relative",
+      zIndex: 1,
+    },
+
+    welcome: {
+      position: "relative",
+      zIndex: 1,
+    },
+
+    welcomeTitle: {
+      fontSize: "clamp(34px, 4vw, 47px)",
+      fontWeight: "800",
+      lineHeight: "1.2",
+      margin: "0 0 18px",
+    },
+
+    welcomeText: {
+      fontSize: "15px",
+      lineHeight: "1.8",
+      color: "#FBE8E0",
+      maxWidth: "330px",
+    },
+
+    footer: {
+      fontSize: "12px",
+      color: "#F5D6CA",
+      position: "relative",
+      zIndex: 1,
+    },
+
+    right: {
+      padding: "40px 45px",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      boxSizing: "border-box",
+    },
+
+    heading: {
+      color: "#30231F",
+      fontSize: "31px",
+      fontWeight: "800",
+      margin: "0 0 7px",
+    },
+
+    subtitle: {
+      color: "#88766E",
+      fontSize: "13px",
+      lineHeight: "1.7",
+      margin: "0 0 25px",
+    },
+
+    label: {
+      display: "block",
+      color: "#49372F",
+      fontSize: "12px",
+      fontWeight: "700",
+      marginBottom: "8px",
+    },
+
+    input: {
+      width: "100%",
+      height: "47px",
+      padding: "0 13px",
+      boxSizing: "border-box",
+      border: "1px solid #E9DDD7",
+      borderRadius: "10px",
+      background: "#FFFCFA",
+      fontSize: "13px",
+      color: "#30231F",
+      outline: "none",
+      transition: "all 0.25s ease",
+    },
+
+    error: {
+      color: "#D64545",
+      fontSize: "11px",
+      margin: "5px 0 0",
+    },
+
+    field: {
+      minWidth: 0,
+    },
+
+    submit: {
+      width: "100%",
+      height: "49px",
+      marginTop: "8px",
+      background: isSubmitting ? "#C99A8A" : "#B95F43",
+      color: "#FFFFFF",
+      border: "none",
+      borderRadius: "10px",
+      fontSize: "14px",
+      fontWeight: "700",
+      cursor: isSubmitting ? "not-allowed" : "pointer",
+      boxShadow: "0 7px 18px rgba(185, 95, 67, 0.2)",
+      transition: "all 0.25s ease",
+    },
   };
 
-  const errorStyle = {
-    color: "#dc2626",
-    fontSize: "13px",
-    marginTop: "5px",
-    marginBottom: 0,
-  };
-
-  // =====================================
-  // UI
-  // =====================================
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#f5f5f5",
-        padding: "20px",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "450px",
-          backgroundColor: "white",
-          padding: "40px",
-          borderRadius: "12px",
-          boxShadow: "0 5px 20px rgba(0, 0, 0, 0.15)",
-          boxSizing: "border-box",
-        }}
-      >
-        <h2
-          style={{
-            textAlign: "center",
-            marginBottom: "30px",
-            color: "#222",
-          }}
-        >
-          Signup
-        </h2>
+    <div style={styles.page}>
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
-        <form onSubmit={handleSubmit(handleSignup)} noValidate>
-          {/* FIRST NAME */}
-          <div style={{ marginBottom: "18px" }}>
-            <label htmlFor="firstName" style={labelStyle}>
-              First Name
-            </label>
+          .signup-input:focus {
+            border-color: #B95F43 !important;
+            background: #FFFFFF !important;
+            box-shadow: 0 0 0 4px rgba(185,95,67,0.10);
+          }
 
-            <input
-              id="firstName"
-              type="text"
-              placeholder="Enter your first name"
-              autoComplete="given-name"
-              {...register("firstName")}
-              style={{
-                ...inputStyle,
-                borderColor: errors.firstName ? "#dc2626" : "#ccc",
-              }}
-            />
+          .signup-button:hover:not(:disabled) {
+            background: #984B35 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(185,95,67,0.25);
+          }
 
-            {errors.firstName && (
-              <p style={errorStyle}>
-                {errors.firstName.message}
-              </p>
-            )}
+          .signup-link:hover {
+            color: #803D2B !important;
+            text-decoration: underline !important;
+          }
+
+          .signup-decoration {
+            position: absolute;
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 50%;
+            pointer-events: none;
+          }
+
+          .role-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 12px;
+            border: 1px solid #E9DDD7;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #49372F;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+          }
+
+          .role-option:has(input:checked) {
+            background: #FFF2EC;
+            border-color: #B95F43;
+            color: #984B35;
+          }
+
+          .role-option input {
+            accent-color: #B95F43;
+          }
+
+          .signup-modal {
+            animation: signupModal 0.25s ease;
+          }
+
+          @keyframes signupModal {
+            from {
+              opacity: 0;
+              transform: translateY(15px) scale(0.97);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          @media (max-width: 800px) {
+            .signup-card {
+              grid-template-columns: 1fr !important;
+              max-width: 520px !important;
+            }
+
+            .signup-left {
+              min-height: 190px;
+              padding: 28px !important;
+            }
+
+            .signup-welcome {
+              margin-top: 28px;
+            }
+
+            .signup-footer {
+              display: none;
+            }
+
+            .signup-right {
+              padding: 35px 28px !important;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .signup-right {
+              padding: 28px 20px !important;
+            }
+
+            .signup-fields {
+              grid-template-columns: 1fr !important;
+            }
+
+            .signup-heading {
+              font-size: 27px !important;
+            }
+          }
+        `}
+      </style>
+
+      <div className="signup-card" style={styles.card}>
+        {/* LEFT PANEL */}
+        <div className="signup-left" style={styles.left}>
+          <div
+            className="signup-decoration"
+            style={{
+              width: "280px",
+              height: "280px",
+              right: "-100px",
+              top: "-100px",
+            }}
+          />
+
+          <div
+            className="signup-decoration"
+            style={{
+              width: "370px",
+              height: "370px",
+              right: "-145px",
+              top: "-145px",
+            }}
+          />
+
+          <h2 style={styles.logo}>PRODUCT HUB.</h2>
+
+          <div className="signup-welcome" style={styles.welcome}>
+            <h1 style={styles.welcomeTitle}>
+              Create Your
+              <br />
+              Account.
+            </h1>
+
+            <p style={styles.welcomeText}>
+              Join PRODUCT HUB and get started with your account today.
+            </p>
           </div>
 
-          {/* LAST NAME */}
-          <div style={{ marginBottom: "18px" }}>
-            <label htmlFor="lastName" style={labelStyle}>
-              Last Name
-            </label>
+          <p className="signup-footer" style={styles.footer}>
+            PRODUCT HUB
+          </p>
+        </div>
 
-            <input
-              id="lastName"
-              type="text"
-              placeholder="Enter your last name"
-              autoComplete="family-name"
-              {...register("lastName")}
-              style={{
-                ...inputStyle,
-                borderColor: errors.lastName ? "#dc2626" : "#ccc",
-              }}
-            />
+        {/* RIGHT PANEL */}
+        <div className="signup-right" style={styles.right}>
+          <h2 className="signup-heading" style={styles.heading}>
+            Sign Up
+          </h2>
 
-            {errors.lastName && (
-              <p style={errorStyle}>
-                {errors.lastName.message}
-              </p>
-            )}
-          </div>
+          <p style={styles.subtitle}>
+            Enter your details to create your account.
+          </p>
 
-          {/* EMAIL */}
-          <div style={{ marginBottom: "18px" }}>
-            <label htmlFor="email" style={labelStyle}>
-              Email
-            </label>
-
-            <input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              autoComplete="email"
-              {...register("email")}
-              style={{
-                ...inputStyle,
-                borderColor: errors.email ? "#dc2626" : "#ccc",
-              }}
-            />
-
-            {errors.email && (
-              <p style={errorStyle}>
-                {errors.email.message}
-              </p>
-            )}
-          </div>
-
-          {/* PASSWORD */}
-          <div style={{ marginBottom: "18px" }}>
-            <label htmlFor="password" style={labelStyle}>
-              Password
-            </label>
-
-            <input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              autoComplete="new-password"
-              {...register("password")}
-              style={{
-                ...inputStyle,
-                borderColor: errors.password ? "#dc2626" : "#ccc",
-              }}
-            />
-
-            {errors.password && (
-              <p style={errorStyle}>
-                {errors.password.message}
-              </p>
-            )}
-          </div>
-
-          {/* ROLE */}
-          <div style={{ marginBottom: "25px" }}>
-            <label style={labelStyle}>
-              Register as
-            </label>
-
+          <form onSubmit={handleSubmit(handleSignup)} noValidate>
+            {/* FIRST NAME AND LAST NAME */}
             <div
+              className="signup-fields"
               style={{
-                display: "flex",
-                gap: "30px",
-                alignItems: "center",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "15px",
+                marginBottom: "17px",
               }}
             >
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  cursor: "pointer",
-                  fontSize: "15px",
-                }}
-              >
-                <input
-                  type="radio"
-                  value="user"
-                  {...register("role")}
-                />
-                User
-              </label>
+              <div style={styles.field}>
+                <label htmlFor="firstName" style={styles.label}>
+                  First Name
+                </label>
 
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  cursor: "pointer",
-                  fontSize: "15px",
-                }}
-              >
                 <input
-                  type="radio"
-                  value="seller"
-                  {...register("role")}
+                  id="firstName"
+                  type="text"
+                  placeholder="First name"
+                  autoComplete="given-name"
+                  className="signup-input"
+                  {...register("firstName")}
+                  style={{
+                    ...styles.input,
+                    borderColor: errors.firstName ? "#D64545" : "#E9DDD7",
+                  }}
                 />
-                Seller
-              </label>
+
+                {errors.firstName && (
+                  <p style={styles.error}>{errors.firstName.message}</p>
+                )}
+              </div>
+
+              <div style={styles.field}>
+                <label htmlFor="lastName" style={styles.label}>
+                  Last Name
+                </label>
+
+                <input
+                  id="lastName"
+                  type="text"
+                  placeholder="Last name"
+                  autoComplete="family-name"
+                  className="signup-input"
+                  {...register("lastName")}
+                  style={{
+                    ...styles.input,
+                    borderColor: errors.lastName ? "#D64545" : "#E9DDD7",
+                  }}
+                />
+
+                {errors.lastName && (
+                  <p style={styles.error}>{errors.lastName.message}</p>
+                )}
+              </div>
             </div>
 
-            {errors.role && (
-              <p style={errorStyle}>
-                {errors.role.message}
-              </p>
-            )}
-          </div>
+            {/* EMAIL */}
+            <div style={{ marginBottom: "17px" }}>
+              <label htmlFor="email" style={styles.label}>
+                Email Address
+              </label>
 
-          {/* SUBMIT BUTTON */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
+              <input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                autoComplete="email"
+                className="signup-input"
+                {...register("email")}
+                style={{
+                  ...styles.input,
+                  borderColor: errors.email ? "#D64545" : "#E9DDD7",
+                }}
+              />
+
+              {errors.email && (
+                <p style={styles.error}>{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* PASSWORD */}
+            <div style={{ marginBottom: "19px" }}>
+              <label htmlFor="password" style={styles.label}>
+                Password
+              </label>
+
+              <div style={{ position: "relative" }}>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a password"
+                  autoComplete="new-password"
+                  className="signup-input"
+                  {...register("password")}
+                  style={{
+                    ...styles.input,
+                    paddingRight: "65px",
+                    borderColor: errors.password ? "#D64545" : "#E9DDD7",
+                  }}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((previous) => !previous)}
+                  style={{
+                    position: "absolute",
+                    right: "13px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "transparent",
+                    border: "none",
+                    color: "#A16B59",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                  }}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+
+              {errors.password && (
+                <p style={styles.error}>{errors.password.message}</p>
+              )}
+            </div>
+
+            {/* ROLE SELECTION */}
+            <div style={{ marginBottom: "20px" }}>
+              <label style={styles.label}>Register As</label>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <label className="role-option">
+                  <input
+                    type="radio"
+                    value="user"
+                    {...register("role")}
+                  />
+                  User
+                </label>
+
+                <label className="role-option">
+                  <input
+                    type="radio"
+                    value="seller"
+                    {...register("role")}
+                  />
+                  Seller
+                </label>
+              </div>
+
+              {errors.role && (
+                <p style={styles.error}>{errors.role.message}</p>
+              )}
+            </div>
+
+            {/* SUBMIT */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="signup-button"
+              style={styles.submit}
+            >
+              {isSubmitting ? "Creating Account..." : "Create Account"}
+            </button>
+          </form>
+
+          {/* LOGIN LINK */}
+          <p
             style={{
-              width: "100%",
-              padding: "12px",
-              backgroundColor: isSubmitting ? "#666" : "#222",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "16px",
-              cursor: isSubmitting ? "not-allowed" : "pointer",
-              opacity: isSubmitting ? 0.8 : 1,
+              textAlign: "center",
+              marginTop: "22px",
+              marginBottom: 0,
+              color: "#88766E",
+              fontSize: "13px",
             }}
           >
-            {isSubmitting ? "Creating Account..." : "Sign Up"}
-          </button>
-        </form>
+            Already have an account?{" "}
+            <a
+              href="/login"
+              className="signup-link"
+              style={{
+                color: "#B95F43",
+                fontWeight: "700",
+                textDecoration: "none",
+              }}
+            >
+              Login
+            </a>
+          </p>
+        </div>
       </div>
 
       {/* ERROR MODAL */}
@@ -404,7 +624,8 @@ const handleSignup = async (formData) => {
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(0,0,0,0.6)",
+            background: "rgba(35,23,18,0.65)",
+            backdropFilter: "blur(5px)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -413,35 +634,36 @@ const handleSignup = async (formData) => {
           }}
         >
           <div
+            className="signup-modal"
             role="alertdialog"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
             style={{
               width: "100%",
-              maxWidth: "380px",
+              maxWidth: "390px",
               maxHeight: "80vh",
               overflowY: "auto",
-              backgroundColor: "#fff",
-              padding: "30px",
-              borderRadius: "12px",
+              background: "#FFFCFA",
+              padding: "32px",
+              borderRadius: "20px",
               textAlign: "center",
-              boxShadow: "0 5px 25px rgba(0,0,0,0.25)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
               boxSizing: "border-box",
             }}
           >
             <div
               style={{
-                width: "55px",
-                height: "55px",
+                width: "58px",
+                height: "58px",
                 borderRadius: "50%",
-                backgroundColor: "#ffe5e5",
-                color: "#dc3545",
-                fontSize: "32px",
-                fontWeight: "bold",
+                background: "#FCEAE5",
+                color: "#B95F43",
+                fontSize: "30px",
+                fontWeight: "700",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                margin: "0 auto 15px",
+                margin: "0 auto 18px",
               }}
             >
               !
@@ -449,9 +671,9 @@ const handleSignup = async (formData) => {
 
             <h3
               style={{
-                color: "#222",
-                margin: "0 0 10px",
-                fontSize: "21px",
+                color: "#30231F",
+                fontSize: "22px",
+                margin: "0 0 12px",
               }}
             >
               Signup Failed
@@ -459,9 +681,9 @@ const handleSignup = async (formData) => {
 
             <p
               style={{
-                color: "#666",
-                fontSize: "14px",
-                lineHeight: "1.7",
+                color: "#806D64",
+                fontSize: "13px",
+                lineHeight: "1.8",
                 marginBottom: "25px",
                 whiteSpace: "pre-line",
                 overflowWrap: "anywhere",
@@ -476,13 +698,13 @@ const handleSignup = async (formData) => {
               onClick={closeErrorModal}
               style={{
                 width: "100%",
-                padding: "12px",
-                backgroundColor: "#dc3545",
-                color: "#fff",
+                padding: "13px",
+                background: "#B95F43",
+                color: "#FFFFFF",
                 border: "none",
-                borderRadius: "7px",
-                fontSize: "15px",
-                fontWeight: "600",
+                borderRadius: "10px",
+                fontSize: "14px",
+                fontWeight: "700",
                 cursor: "pointer",
               }}
             >
