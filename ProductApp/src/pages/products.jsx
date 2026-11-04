@@ -1,38 +1,42 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import Navbar from "../components/Navbar";
 import { getProducts } from "../api/productApi";
 
+const BACKEND_URL = (
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api"
+).replace(/\/api\/?$/, "");
+
+const getImageUrl = (image) => {
+  if (!image) return "";
+
+  if (image.startsWith("http://") || image.startsWith("https://")) {
+    return image;
+  }
+
+  return `${BACKEND_URL}/${image.replace(/\\/g, "/").replace(/^\//, "")}`;
+};
+
 function Products({ products = [], setProducts }) {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Login modal state
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const limit = 8;
   const CART_KEY = "cart";
 
-  // CHECK LOGIN STATUS
-
   const isLoggedIn = () => {
     const accessToken = localStorage.getItem("accessToken");
     const savedUser = localStorage.getItem("user");
 
-    if (!accessToken || !savedUser) {
-      return false;
-    }
+    if (!accessToken || !savedUser) return false;
 
     try {
       const user = JSON.parse(savedUser);
@@ -43,18 +47,12 @@ function Products({ products = [], setProducts }) {
     }
   };
 
-  // GET CART
-
   const getCart = () => {
     try {
       const savedCart = localStorage.getItem(CART_KEY);
-
-      if (!savedCart) {
-        return [];
-      }
+      if (!savedCart) return [];
 
       const cart = JSON.parse(savedCart);
-
       return Array.isArray(cart) ? cart : [];
     } catch (error) {
       console.error("Get Cart Error:", error);
@@ -62,20 +60,11 @@ function Products({ products = [], setProducts }) {
     }
   };
 
-  // CHECK PRODUCT IN CART
-
   const isProductInCart = (productId) => {
-    const cart = getCart();
-
-    return cart.some(
+    return getCart().some(
       (item) => String(item._id) === String(productId)
     );
   };
-
-  // FETCH ALL PRODUCTS
-  // Fetch every backend page once so search can find products
-  // across the complete product list. Pagination is handled
-  // on the frontend with 8 products per page.
 
   useEffect(() => {
     let isMounted = true;
@@ -87,8 +76,6 @@ function Products({ products = [], setProducts }) {
 
         const firstResponse = await getProducts(1, limit);
 
-        console.log("Products Response:", firstResponse);
-
         const extractProducts = (response) => {
           if (Array.isArray(response?.data)) return response.data;
           if (Array.isArray(response?.products)) return response.products;
@@ -97,6 +84,7 @@ function Products({ products = [], setProducts }) {
         };
 
         const firstPageProducts = extractProducts(firstResponse);
+
         const backendTotalPages = Math.max(
           1,
           Number(firstResponse?.pagination?.totalPages) || 1
@@ -118,8 +106,10 @@ function Products({ products = [], setProducts }) {
 
         if (!isMounted) return;
 
-        setProducts(allProducts);
-        setTotalPages(Math.max(1, Math.ceil(allProducts.length / limit)));
+        if (typeof setProducts === "function") {
+          setProducts(allProducts);
+        }
+
         setPage(1);
       } catch (error) {
         console.error(
@@ -128,7 +118,7 @@ function Products({ products = [], setProducts }) {
         );
 
         if (isMounted) {
-          setError("Unable to load products.");
+          setError("Unable to load products. Please try again.");
         }
       } finally {
         if (isMounted) {
@@ -144,18 +134,14 @@ function Products({ products = [], setProducts }) {
     };
   }, [setProducts]);
 
-  // ADD TO CART
-
   const handleAddToCart = (e, product) => {
     e.stopPropagation();
 
     if (!product?._id) {
-      console.error("Product ID is missing");
       toast.error("Unable to add product to cart.");
       return;
     }
 
-    // Always check login before modifying the cart
     if (!isLoggedIn()) {
       setShowLoginModal(true);
       return;
@@ -169,14 +155,12 @@ function Products({ products = [], setProducts }) {
       );
 
       if (existingProductIndex !== -1) {
-        // Increase quantity if product already exists
         cart[existingProductIndex] = {
           ...cart[existingProductIndex],
           quantity:
             Number(cart[existingProductIndex].quantity || 0) + 1,
         };
       } else {
-        // Add new product
         cart.push({
           _id: product._id,
           name: product.name,
@@ -189,47 +173,31 @@ function Products({ products = [], setProducts }) {
         });
       }
 
-      // Save cart
       localStorage.setItem(CART_KEY, JSON.stringify(cart));
 
-      // Refresh product state
-      if (typeof setProducts === "function") {
-        setProducts((previous) => [...previous]);
-      }
+      toast.success(`${product.name} added to cart!`, {
+        position: "top-right",
+        autoClose: 1000,
+      });
 
-     toast.success(`${product.name} added to cart!`, {
-  position: "top-right",
-  autoClose: 1000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: false,
-  pauseOnFocusLoss: false,
-  draggable: false,
-});
-      // Navigate after the toast closes
-setTimeout(() => {
-  navigate("/cart");
-}, 1500);
+      setTimeout(() => {
+        navigate("/cart");
+      }, 1500);
     } catch (error) {
       console.error("Add To Cart Error:", error);
       toast.error("Unable to add product to cart.");
     }
   };
 
-  // CART BUTTON CLICK
-
   const handleCartButtonClick = (e, product) => {
     e.stopPropagation();
 
-    // IMPORTANT: Check login before checking the cart
     if (!isLoggedIn()) {
       setShowLoginModal(true);
       return;
     }
 
-    const addedToCart = isProductInCart(product._id);
-
-    if (addedToCart) {
+    if (isProductInCart(product._id)) {
       navigate("/cart");
       return;
     }
@@ -237,20 +205,10 @@ setTimeout(() => {
     handleAddToCart(e, product);
   };
 
-  // PRODUCT CARD CLICK
-
   const handleProductClick = (product) => {
-    if (!product?._id) {
-      console.error("Product ID is missing");
-      return;
-    }
-
+    if (!product?._id) return;
     navigate(`/each-item/${product._id}`);
   };
-
-  // SEARCH PRODUCTS
-  // Search across ALL products fetched from the backend.
-  // While searching, show every matching product and hide pagination.
 
   const filteredProducts = products.filter((product) => {
     const search = searchTerm.trim().toLowerCase();
@@ -266,9 +224,6 @@ setTimeout(() => {
     );
   });
 
-  const isSearching = searchTerm.trim().length > 0;
-
-  // Show only 8 products on each page, including search results.
   const filteredTotalPages = Math.max(
     1,
     Math.ceil(filteredProducts.length / limit)
@@ -279,469 +234,631 @@ setTimeout(() => {
     page * limit
   );
 
-  // LOADING
-
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-
-        <div
-          style={{
-            minHeight: "70vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <h2>Loading products...</h2>
-        </div>
-
-        <ToastContainer />
-      </>
-    );
-  }
-
-  // ERROR
-
-  if (error) {
-    return (
-      <>
-        <Navbar />
-
-        <div
-          style={{
-            minHeight: "70vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <h2>{error}</h2>
-        </div>
-
-        <ToastContainer />
-      </>
-    );
-  }
-
-  
-  // PRODUCTS PAGE
+  const isSearching = searchTerm.trim().length > 0;
 
   return (
     <>
       <Navbar />
-
       <ToastContainer />
 
-      <div
-        style={{
-          minHeight: "100vh",
-          padding: "40px 20px",
-          backgroundColor: "#f5f5f5",
-          boxSizing: "border-box",
-        }}
-      >
-        <h1
-          style={{
-            textAlign: "center",
-            marginBottom: "25px",
-          }}
-        >
-          Products
-        </h1>
+      <style>
+        {`
+          .products-page {
+            min-height: 100vh;
+            background: #f8f8f6;
+            padding: 45px 24px 65px;
+            box-sizing: border-box;
+          }
 
-        {/* SEARCH PRODUCTS */}
-        <div
-          style={{
-            maxWidth: "500px",
-            margin: "0 auto 30px",
-            position: "relative",
-          }}
-        >
-          <input
-            type="search"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Search by product name, category, description or seller..."
-            aria-label="Search products"
-            style={{
-              width: "100%",
-              padding: "13px 16px 13px 42px",
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-              outline: "none",
-              fontSize: "15px",
-              boxSizing: "border-box",
-              backgroundColor: "#fff",
-            }}
-          />
-          <span
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              left: "15px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              fontSize: "18px",
-              color: "#777",
-            }}
-          >
-            🔍
-          </span>
+          .products-container {
+            max-width: 1240px;
+            margin: 0 auto;
+          }
+
+          .products-heading {
+            text-align: center;
+            margin-bottom: 12px;
+            color: #30231f;
+            font-size: 36px;
+            font-weight: 750;
+            letter-spacing: -1px;
+          }
+
+          .products-subheading {
+            text-align: center;
+            color: #81756f;
+            font-size: 15px;
+            margin: 0 0 30px;
+          }
+
+          .products-search {
+            max-width: 550px;
+            margin: 0 auto 35px;
+            position: relative;
+          }
+
+          .products-search input {
+            width: 100%;
+            height: 52px;
+            padding: 0 18px 0 48px;
+            border: 1px solid #e5ded9;
+            border-radius: 10px;
+            background: #fff;
+            outline: none;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+          }
+
+          .products-search input:focus {
+            border-color: #b95f43;
+            box-shadow: 0 0 0 3px rgba(185, 95, 67, 0.10);
+          }
+
+          .search-icon {
+            position: absolute;
+            left: 17px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #95877f;
+            font-size: 18px;
+          }
+
+          .products-count {
+            color: #82766f;
+            font-size: 14px;
+            margin: 0 0 18px;
+          }
+
+          .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 24px;
+          }
+
+          .product-card {
+            min-width: 0;
+            background: #fff;
+            border: 1px solid #eee9e5;
+            border-radius: 13px;
+            overflow: hidden;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+          }
+
+          .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(48, 35, 31, 0.10);
+          }
+
+          .product-image-wrapper {
+            width: 100%;
+            height: 220px;
+            background: #f3f0ed;
+            overflow: hidden;
+            position: relative;
+          }
+
+          .product-image {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+          }
+
+          .product-card:hover .product-image {
+            transform: scale(1.05);
+          }
+
+          .product-image-placeholder {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #968b84;
+            font-size: 14px;
+          }
+
+          .product-content {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+          }
+
+          .product-category {
+            display: inline-block;
+            align-self: flex-start;
+            background: #fff0eb;
+            color: #a6533a;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+          }
+
+          .product-name {
+            color: #30231f;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.4;
+            margin: 0 0 9px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 50px;
+          }
+
+          .product-description {
+            color: #82766f;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0 0 14px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          .product-bottom {
+            margin-top: auto;
+            padding-top: 14px;
+            border-top: 1px solid #f0ece9;
+          }
+
+          .product-price {
+            color: #b95f43;
+            font-size: 23px;
+            font-weight: 750;
+            margin-bottom: 13px;
+          }
+
+          .product-seller {
+            color: #92867f;
+            font-size: 12px;
+            margin-bottom: 13px;
+          }
+
+          .add-cart-button {
+            width: 100%;
+            border: none;
+            border-radius: 7px;
+            padding: 12px;
+            background: #b95f43;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+          }
+
+          .add-cart-button:hover {
+            background: #984a33;
+          }
+
+          .add-cart-button.added {
+            background: #77736f;
+          }
+
+          .products-empty {
+            background: #fff;
+            border: 1px solid #eee9e5;
+            border-radius: 12px;
+            padding: 55px 20px;
+            text-align: center;
+            color: #30231f;
+          }
+
+          .products-empty p {
+            color: #82766f;
+          }
+
+          .clear-search-button {
+            border: none;
+            background: #b95f43;
+            color: #fff;
+            border-radius: 7px;
+            padding: 11px 20px;
+            font-weight: 600;
+            cursor: pointer;
+          }
+
+          .products-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 40px;
+          }
+
+          .products-pagination button {
+            padding: 10px 18px;
+            border: 1px solid #e5ded9;
+            border-radius: 7px;
+            background: #fff;
+            color: #30231f;
+            cursor: pointer;
+            font-weight: 600;
+          }
+
+          .products-pagination button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+          }
+
+          .products-pagination button:not(:disabled):hover {
+            background: #b95f43;
+            color: #fff;
+            border-color: #b95f43;
+          }
+
+          .products-pagination span {
+            color: #82766f;
+            font-size: 14px;
+          }
+
+          .products-loading {
+            min-height: 70vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #30231f;
+          }
+
+          .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(35, 25, 21, 0.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 9999;
+          }
+
+          .login-modal {
+            background: #fff;
+            width: 100%;
+            max-width: 400px;
+            padding: 32px;
+            border-radius: 14px;
+            text-align: center;
+            box-sizing: border-box;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.18);
+          }
+
+          .login-modal-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            margin: 0 auto 17px;
+            background: #fff0eb;
+            color: #b95f43;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 26px;
+            font-weight: 700;
+          }
+
+          .login-modal h2 {
+            color: #30231f;
+            margin: 0 0 12px;
+          }
+
+          .login-modal p {
+            color: #82766f;
+            line-height: 1.6;
+            font-size: 14px;
+            margin-bottom: 24px;
+          }
+
+          .login-modal-actions {
+            display: flex;
+            gap: 12px;
+          }
+
+          .login-modal-actions button {
+            flex: 1;
+            padding: 11px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: 600;
+          }
+
+          .login-cancel {
+            background: #f4f1ef;
+            border: 1px solid #e5ded9;
+            color: #51443e;
+          }
+
+          .login-submit {
+            background: #b95f43;
+            border: 1px solid #b95f43;
+            color: white;
+          }
+
+          @media (max-width: 600px) {
+            .products-page {
+              padding: 30px 15px 45px;
+            }
+
+            .products-heading {
+              font-size: 29px;
+            }
+
+            .products-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 12px;
+            }
+
+            .product-image-wrapper {
+              height: 155px;
+            }
+
+            .product-content {
+              padding: 12px;
+            }
+
+            .product-name {
+              font-size: 15px;
+              min-height: 42px;
+            }
+
+            .product-price {
+              font-size: 19px;
+            }
+
+            .product-description {
+              font-size: 12px;
+            }
+
+            .add-cart-button {
+              padding: 10px 5px;
+              font-size: 12px;
+            }
+
+            .products-pagination {
+              gap: 8px;
+            }
+
+            .products-pagination button {
+              padding: 9px 12px;
+            }
+          }
+
+          @media (max-width: 360px) {
+            .products-grid {
+              grid-template-columns: 1fr;
+            }
+
+            .product-image-wrapper {
+              height: 210px;
+            }
+          }
+        `}
+      </style>
+
+      {loading ? (
+        <div className="products-loading">
+          <h2>Loading products...</h2>
         </div>
+      ) : error ? (
+        <div className="products-loading">
+          <h2>{error}</h2>
+        </div>
+      ) : (
+        <main className="products-page">
+          <div className="products-container">
+            <h1 className="products-heading">Explore Our Products</h1>
 
-        {products.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "50px",
-            }}
-          >
-            <h2>No products found</h2>
-          </div>
-        ) : displayedProducts.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "45px 20px",
-              backgroundColor: "#fff",
-              borderRadius: "10px",
-              maxWidth: "700px",
-              margin: "0 auto",
-            }}
-          >
-            <h2>No matching products found</h2>
-            <p style={{ color: "#666" }}>
-              Try another product name, category, description or seller.
+            <p className="products-subheading">
+              Find the right products for your everyday needs.
             </p>
-            <button
-              type="button"
-              onClick={() => setSearchTerm("")}
-              style={{
-                padding: "10px 18px",
-                border: "none",
-                borderRadius: "6px",
-                backgroundColor: "#198754",
-                color: "#fff",
-                cursor: "pointer",
-                fontWeight: "600",
-              }}
-            >
-              Clear Search
-            </button>
-          </div>
-        ) : (
-          <>
-          <p
-            style={{
-              maxWidth: "1200px",
-              margin: "0 auto 15px",
-              color: "#666",
-              fontSize: "14px",
-            }}
-          >
-            {isSearching
-              ? `Found ${filteredProducts.length} matching product(s) — showing ${displayedProducts.length} on this page`
-              : `Showing ${displayedProducts.length} of ${filteredProducts.length} product(s)`}
-          </p>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fill, 280px)",
-              justifyContent: "center",
-              gap: "25px",
-              maxWidth: "1200px",
-              margin: "0 auto",
-            }}
-          >
-            {displayedProducts.map((product) => {
-              const addedToCart = isProductInCart(product._id);
 
-              return (
-                <div
-                  key={product._id}
-                  onClick={() => handleProductClick(product)}
-                  style={{
-                    backgroundColor: "white",
-                    borderRadius: "10px",
-                    padding: "25px",
-                    cursor: "pointer",
-                    boxShadow: "0 3px 12px rgba(0,0,0,0.1)",
-                    transition: "transform 0.2s",
-                    display: "flex",
-                    flexDirection: "column",
-                    width: "280px",
-                    height: "500px",
-                    minWidth: "280px",
-                    maxWidth: "280px",
-                    boxSizing: "border-box",
-                    overflow: "hidden",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-5px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
+            <div className="products-search">
+              <span className="search-icon">⌕</span>
+
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search products, categories or sellers..."
+                aria-label="Search products"
+              />
+            </div>
+
+            {products.length === 0 ? (
+              <div className="products-empty">
+                <h2>No products available</h2>
+                <p>Products will appear here when sellers add them.</p>
+              </div>
+            ) : displayedProducts.length === 0 ? (
+              <div className="products-empty">
+                <h2>No matching products found</h2>
+                <p>Try another product name, category or seller.</p>
+
+                <button
+                  className="clear-search-button"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setPage(1);
                   }}
                 >
-                  {/* PRODUCT NAME */}
-                  <h2
-                    style={{
-                      marginBottom: "15px",
-                      minHeight: "58px",
-                      maxHeight: "58px",
-                      overflow: "hidden",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {product.name}
-                  </h2>
+                  Clear Search
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="products-count">
+                  {isSearching
+                    ? `Found ${filteredProducts.length} matching product(s)`
+                    : `Showing ${filteredProducts.length} product(s)`}
+                </p>
 
-                  {/* PRICE */}
-                  <h3
-                    style={{
-                      color: "#e4250f",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    ₹{product.price}
-                  </h3>
+                <div className="products-grid">
+                  {displayedProducts.map((product) => {
+                    const addedToCart = isProductInCart(product._id);
 
-                  {/* CATEGORY */}
-                  <p>
-                    <strong>Category:</strong> {product.category}
-                  </p>
+                    return (
+                      <article
+                        key={product._id}
+                        className="product-card"
+                        onClick={() => handleProductClick(product)}
+                      >
+                        <div className="product-image-wrapper">
+                          {product.image ? (
+                            <img
+                              className="product-image"
+                              src={getImageUrl(product.image)}
+                              alt={product.name || "Product"}
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                                e.currentTarget.nextElementSibling.style.display =
+                                  "flex";
+                              }}
+                            />
+                          ) : null}
 
-                  {/* DESCRIPTION */}
-                  <p
-                    style={{
-                      color: "#666",
-                      lineHeight: "1.5",
-                      overflowWrap: "anywhere",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 4,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <strong>Description:</strong>{" "}
-                    {product.description}
-                  </p>
+                          <div
+                            className="product-image-placeholder"
+                            style={{
+                              display: product.image ? "none" : "flex",
+                              position: product.image ? "absolute" : "static",
+                              inset: 0,
+                              width: "100%",
+                            }}
+                          >
+                            No Image Available
+                          </div>
+                        </div>
 
-                  {/* STOCK */}
-                  <p>
-                    <strong>Stock:</strong> {product.stock}
-                  </p>
+                        <div className="product-content">
+                          <span className="product-category">
+                            {product.category || "General"}
+                          </span>
 
-                  {/* SELLER */}
-                  {product.userId && (
-                    <p>
-                      <strong>Seller:</strong>{" "}
-                      {product.userId.name ||
-                        product.userId.email ||
-                        "Seller"}
-                    </p>
-                  )}
+                          <h2 className="product-name">
+                            {product.name}
+                          </h2>
 
-                  {/* ADD TO CART */}
-                  <button
-                    type="button"
-                    onClick={(e) => handleCartButtonClick(e, product)}
-                    style={{
-                      marginTop: "auto",
-                      padding: "12px 20px",
-                      border: "none",
-                      borderRadius: "6px",
-                      backgroundColor: addedToCart
-                        ? "#6c757d"
-                        : "#198754",
-                      color: "white",
-                      cursor: "pointer",
-                      fontSize: "16px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {addedToCart ? "Added to Cart" : "Add to Cart"}
-                  </button>
+                          <p className="product-description">
+                            {product.description}
+                          </p>
+
+                          <div className="product-bottom">
+                            <div className="product-price">
+                              ₹{product.price}
+                            </div>
+
+                            {product.userId && (
+                              <div className="product-seller">
+                                Seller:{" "}
+                                {product.userId.name ||
+                                  product.userId.email ||
+                                  "Seller"}
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              className={`add-cart-button ${
+                                addedToCart ? "added" : ""
+                              }`}
+                              onClick={(e) =>
+                                handleCartButtonClick(e, product)
+                              }
+                            >
+                              {addedToCart ? "Go to Cart" : "Add to Cart"}
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </>
+            )}
+
+            {filteredProducts.length > limit && (
+              <div className="products-pagination">
+                <button
+                  type="button"
+                  disabled={page === 1}
+                  onClick={() =>
+                    setPage((previous) => Math.max(previous - 1, 1))
+                  }
+                >
+                  Previous
+                </button>
+
+                <span>
+                  Page {page} of {filteredTotalPages}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={page === filteredTotalPages}
+                  onClick={() =>
+                    setPage((previous) =>
+                      Math.min(previous + 1, filteredTotalPages)
+                    )
+                  }
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
-          </>
-        )}
-
-        {/* PAGINATION */}
-        {filteredProducts.length > limit && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "15px",
-              marginTop: "40px",
-              flexWrap: "wrap",
-            }}
-          >
-            <button
-              type="button"
-              disabled={page === 1}
-              onClick={() =>
-                setPage((previous) => Math.max(previous - 1, 1))
-              }
-              style={{
-                padding: "8px 18px",
-                cursor: page === 1 ? "not-allowed" : "pointer",
-              }}
-            >
-              Previous
-            </button>
-
-            <span>
-              Page {page} of {filteredTotalPages}
-            </span>
-
-            <button
-              type="button"
-              disabled={page === filteredTotalPages}
-              onClick={() =>
-                setPage((previous) => Math.min(previous + 1, filteredTotalPages))
-              }
-              style={{
-                padding: "8px 18px",
-                cursor:
-                  page === filteredTotalPages ? "not-allowed" : "pointer",
-              }}
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* LOGIN REQUIRED MODAL */}
+        </main>
+      )}
 
       {showLoginModal && (
         <div
+          className="login-overlay"
           onClick={() => setShowLoginModal(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "20px",
-            zIndex: 9999,
-            boxSizing: "border-box",
-          }}
         >
           <div
+            className="login-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="login-modal-title"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "#fff",
-              color: "#222",
-              padding: "30px",
-              borderRadius: "12px",
-              width: "100%",
-              maxWidth: "400px",
-              textAlign: "center",
-              boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
-              boxSizing: "border-box",
-            }}
           >
-            {/* MODAL ICON */}
-            <div
-              style={{
-                width: "60px",
-                height: "60px",
-                margin: "0 auto 18px",
-                borderRadius: "50%",
-                backgroundColor: "#e8f5e9",
-                color: "#198754",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "28px",
-                fontWeight: "bold",
-              }}
-            >
-              !
-            </div>
+            <div className="login-modal-icon">!</div>
 
-            <h2
-              id="login-modal-title"
-              style={{
-                margin: "0 0 12px",
-                fontSize: "24px",
-              }}
-            >
-              Login Required
-            </h2>
+            <h2 id="login-modal-title">Login Required</h2>
 
-            <p
-              style={{
-                color: "#666",
-                fontSize: "15px",
-                lineHeight: "1.6",
-                marginBottom: "25px",
-              }}
-            >
-              Please log in to your account before adding products
-              to your cart.
+            <p>
+              Please log in to your account before adding products to your
+              cart.
             </p>
 
-            {/* MODAL BUTTONS */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "12px",
-                flexWrap: "wrap",
-              }}
-            >
+            <div className="login-modal-actions">
               <button
                 type="button"
+                className="login-cancel"
                 onClick={() => setShowLoginModal(false)}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#f1f1f1",
-                  color: "#333",
-                  border: "1px solid #ddd",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                }}
               >
                 Cancel
               </button>
 
               <button
                 type="button"
+                className="login-submit"
                 onClick={() => {
                   setShowLoginModal(false);
                   navigate("/login");
-                }}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#198754",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "600",
                 }}
               >
                 Login Now

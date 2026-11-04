@@ -12,6 +12,19 @@ import {
   updateAddress,
 } from "../api/addressApi";
 
+const BACKEND_URL = (
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api"
+).replace(/\/api\/?$/, "");
+
+const getImageUrl = (image) => {
+  if (!image) return "";
+
+  if (image.startsWith("http://") || image.startsWith("https://")) {
+    return image;
+  }
+
+  return `${BACKEND_URL}/${image.replace(/\\/g, "/").replace(/^\//, "")}`;
+};
 
 const addressSchema = yup.object({
   fullName: yup.string().trim().min(2, "Full name must contain at least 2 characters").max(100, "Full name cannot exceed 100 characters").required("Full name is required"),
@@ -1021,14 +1034,37 @@ const handlePlaceOrder = async () => {
                         className="product-item"
                       >
 
-                       
+ 
+
+                        {/* PRODUCT IMAGE */}
+                        <div className="product-image-wrapper">
+                          {product.image ? (
+                            <img
+                              src={getImageUrl(product.image)}
+                              alt={product.name || "Product"}
+                              onError={(event) => {
+                                event.currentTarget.style.display = "none";
+                                const fallback =
+                                  event.currentTarget.nextElementSibling;
+                                if (fallback) fallback.style.display = "flex";
+                              }}
+                            />
+                          ) : null}
+
+                          <div
+                            className="image-fallback"
+                            style={{
+                              display: product.image ? "none" : "flex",
+                            }}
+                          >
+                            <span>▧</span>
+                            <small>Image unavailable</small>
+                          </div>
 
                           <span className="product-quantity">
-                            ×
-                            {
-                              product.quantity
-                            }
+                            ×{product.quantity}
                           </span>
+                        </div>
 
                         {/* PRODUCT INFO */}
 
@@ -2843,6 +2879,224 @@ function CheckoutStyles() {
           .notice-ok-btn {
             animation: none !important;
             transition: none !important;
+          }
+        }
+
+        /* HANDY HUB WARM THEME + PRODUCT IMAGE POLISH */
+        .checkout-page,
+        .empty-cart-page,
+        .success-page {
+          background: #fffaf8;
+        }
+
+        .checkout-label,
+        .modal-label,
+        .notice-eyebrow {
+          color: #b95f43;
+        }
+
+        .checkout-header h1,
+        .card-header h2,
+        .product-header h2,
+        .address-top h3,
+        .product-info h3 {
+          color: #30231f;
+        }
+
+        .checkout-card,
+        .product-card {
+          border-color: #f0e5e0;
+          border-radius: 17px;
+          box-shadow: 0 7px 25px rgba(80, 45, 30, 0.055);
+        }
+
+        .section-number,
+        .items-count {
+          background: #fff0e9;
+          color: #b95f43;
+        }
+
+        .add-address-btn,
+        .select-address-btn,
+        .confirm-address-btn,
+        .place-order-btn,
+        .modal-save-btn,
+        .primary-link {
+          background: linear-gradient(135deg, #b95f43, #a64e35);
+          color: #ffffff;
+        }
+
+        .add-address-btn:hover,
+        .place-order-btn:hover:not(:disabled),
+        .modal-save-btn:hover:not(:disabled) {
+          background: #98482f;
+        }
+
+        .address-card-selected,
+        .payment-card-selected {
+          border-color: #b95f43;
+          background: #fff8f4;
+          box-shadow: 0 5px 18px rgba(185, 95, 67, 0.09);
+        }
+
+        .address-radio-selected,
+        .selected-badge,
+        .payment-check,
+        .success-icon {
+          border-color: #b95f43;
+          background: #b95f43;
+        }
+
+        .address-radio-selected {
+          color: #ffffff;
+        }
+
+        .address-card:hover,
+        .payment-card:hover {
+          border-color: #d9a18e;
+        }
+
+        .product-item {
+          align-items: center;
+          gap: 17px;
+          padding: 18px 0;
+        }
+
+        .product-image-wrapper {
+          position: relative;
+          flex: 0 0 104px;
+          width: 104px;
+          height: 112px;
+          overflow: hidden;
+          border: 1px solid #f0e2dc;
+          border-radius: 12px;
+          background: #fff3ed;
+        }
+
+        .product-image-wrapper img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+
+        .product-item:hover .product-image-wrapper img {
+          transform: scale(1.05);
+        }
+
+        .image-fallback {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          color: #a88a7d;
+        }
+
+        .image-fallback span {
+          font-size: 29px;
+        }
+
+        .image-fallback small {
+          font-size: 9px;
+        }
+
+        .product-quantity {
+          right: 6px;
+          bottom: 6px;
+          min-width: 27px;
+          padding: 4px 7px;
+          border-radius: 7px;
+          background: #30231f;
+          color: #ffffff;
+        }
+
+        .product-category {
+          background: #fff0e9;
+          color: #a95037;
+        }
+
+        .product-price-row strong,
+        .final-product-total strong,
+        .total-row strong {
+          color: #b95f43;
+        }
+
+        .product-total-box {
+          background: #fff8f4;
+          border: 1px solid #f2e5de;
+          border-radius: 12px;
+        }
+
+        .summary-divider,
+        .final-product-total {
+          border-color: #eee1db;
+        }
+
+        .modal-header {
+          background: linear-gradient(135deg, #fff4ee 0%, #ffffff 85%);
+        }
+
+        .modal-label {
+          background: #fff0e9;
+          color: #a95037;
+        }
+
+        .modal-header h2::after {
+          background: #b95f43;
+        }
+
+        .form-group input:focus {
+          border-color: #b95f43;
+          box-shadow: 0 0 0 4px rgba(185, 95, 67, 0.11);
+        }
+
+        .empty-cart-box,
+        .success-box {
+          border: 1px solid #f0e5e0;
+          box-shadow: 0 10px 35px rgba(80, 45, 30, 0.07);
+        }
+
+        .empty-cart-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 82px;
+          height: 82px;
+          margin: 0 auto 18px;
+          border-radius: 50%;
+          background: #fff0e9;
+        }
+
+        .success-icon {
+          background: #b95f43;
+        }
+
+        .primary-link:hover {
+          background: #98482f;
+        }
+
+        @media (max-width: 600px) {
+          .product-item {
+            gap: 12px;
+            align-items: flex-start;
+          }
+
+          .product-image-wrapper {
+            flex: 0 0 82px;
+            width: 82px;
+            height: 92px;
+          }
+
+          .product-info h3 {
+            font-size: 14px;
+          }
+
+          .product-price-row {
+            margin-top: 12px;
           }
         }
 

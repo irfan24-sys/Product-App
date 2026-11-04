@@ -5,13 +5,25 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "react-toastify";
 
-import { addProduct, updateProduct, getProduct } from "../api/productApi";
+import {
+  addProduct,
+  updateProduct,
+  getProduct,
+} from "../api/productApi";
 
 import Navbar from "../components/Navbar";
 
-// ========================================
-// YUP VALIDATION SCHEMA
-// ========================================
+const BACKEND_URL = (
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api"
+).replace(/\/api\/?$/, "");
+
+const getImageUrl = (image) => {
+  if (!image) return "";
+
+  if (image.startsWith("http")) return image;
+
+  return `${BACKEND_URL}/${image.replace(/\\/g, "/")}`;
+};
 
 const productSchema = yup.object({
   name: yup
@@ -24,7 +36,7 @@ const productSchema = yup.object({
   price: yup
     .number()
     .transform((value, originalValue) =>
-      originalValue === "" || originalValue == null ? NaN : value,
+      originalValue === "" || originalValue == null ? NaN : value
     )
     .typeError("Price is required and must be a valid number")
     .required("Price is required")
@@ -60,16 +72,15 @@ function AddProduct() {
 
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
+
   const [screenWidth, setScreenWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1024,
+    typeof window !== "undefined" ? window.innerWidth : 1024
   );
 
   const isMobile = screenWidth <= 600;
   const isTablet = screenWidth > 600 && screenWidth <= 900;
-
-  // ========================================
-  // REACT HOOK FORM
-  // ========================================
 
   const {
     register,
@@ -85,20 +96,25 @@ function AddProduct() {
     reValidateMode: "onChange",
   });
 
-  // ========================================
-  // RESPONSIVE SCREEN WIDTH
-  // ========================================
+  useEffect(() => {
+    return () => {
+      if (previewImage.startsWith("blob:")) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage]);
 
   useEffect(() => {
-    const handleResize = () => setScreenWidth(window.innerWidth);
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
-  // ========================================
-  // LOAD EXISTING PRODUCT FOR EDITING
-  // ========================================
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -106,6 +122,8 @@ function AddProduct() {
     const loadProduct = async () => {
       if (!productId) {
         reset(defaultValues);
+        setSelectedImage(null);
+        setPreviewImage("");
         return;
       }
 
@@ -113,10 +131,15 @@ function AddProduct() {
         setLoadingProduct(true);
 
         const response = await getProduct(productId);
-        const product =
-          response?.data?.data || response?.data || response?.product;
 
-        if (!product) {
+        const product =
+          response?.data?.data?.product ||
+          response?.data?.data ||
+          response?.data?.product ||
+          response?.data ||
+          response?.product;
+
+        if (!product || !product._id) {
           toast.error("Product not found");
           navigate("/seller-dashboard");
           return;
@@ -133,12 +156,22 @@ function AddProduct() {
           category: product.category || "",
           description: product.description || "",
         });
-      } catch (error) {
-        console.error("Get product error:", error.response?.data || error);
 
-        toast.error(error.response?.data?.message || "Failed to load product");
+        setSelectedImage(null);
+        setPreviewImage(getImageUrl(product.image));
+      } catch (error) {
+        console.error(
+          "Get product error:",
+          error.response?.data || error
+        );
+
+        toast.error(
+          error.response?.data?.message || "Failed to load product"
+        );
       } finally {
-        if (isMounted) setLoadingProduct(false);
+        if (isMounted) {
+          setLoadingProduct(false);
+        }
       }
     };
 
@@ -149,9 +182,32 @@ function AddProduct() {
     };
   }, [productId, navigate, reset]);
 
-  // ========================================
-  // SUBMIT FORM
-  // ========================================
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Only JPG, PNG and WEBP images are allowed");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image size must be below 10MB");
+      e.target.value = "";
+      return;
+    }
+
+    setSelectedImage(file);
+    setPreviewImage(URL.createObjectURL(file));
+  };
 
   const onSubmit = async (values) => {
     if (saving || isSubmitting) return;
@@ -160,21 +216,53 @@ function AddProduct() {
       setSaving(true);
       clearErrors();
 
-      const productData = {
-        name: values.name.trim(),
-        description: values.description.trim(),
-        price: Number(values.price),
-        category: values.category.trim(),
-      };
+      if (!isEditMode && !selectedImage) {
+        toast.error("Please select a product image");
+        return;
+      }
+
+      const formData = new FormData();
+
+      formData.append("name", values.name.trim());
+      formData.append("description", values.description.trim());
+      formData.append("price", Number(values.price));
+      formData.append("category", values.category.trim());
+
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
+      console.log("FormData contents:");
+
+      for (const [key, value] of formData.entries()) {
+        console.log(
+          key,
+          value instanceof File
+            ? {
+                name: value.name,
+                type: value.type,
+                size: value.size,
+              }
+            : value
+        );
+      }
+
+      console.log("Selected Image:", formData.get("image"));
 
       let response;
 
       if (isEditMode) {
-        response = await updateProduct(productId, productData);
-        toast.success(response?.message || "Product updated successfully!");
+        response = await updateProduct(productId, formData);
+
+        toast.success(
+          response?.message || "Product updated successfully!"
+        );
       } else {
-        response = await addProduct(productData);
-        toast.success(response?.message || "Product added successfully!");
+        response = await addProduct(formData);
+
+        toast.success(
+          response?.message || "Product added successfully!"
+        );
       }
 
       console.log("Product save response:", response);
@@ -183,12 +271,17 @@ function AddProduct() {
         navigate("/seller-dashboard");
       }, 1000);
     } catch (error) {
-      console.error("Product error:", error.response?.data || error);
+      console.error(
+        "Product error:",
+        error.response?.data || error
+      );
 
       const responseData = error.response?.data;
 
-      // Map express-validator errors to the matching form fields.
-      if (Array.isArray(responseData?.errors) && responseData.errors.length) {
+      if (
+        Array.isArray(responseData?.errors) &&
+        responseData.errors.length
+      ) {
         responseData.errors.forEach((item) => {
           const field = item.field || item.path || item.param;
           const message = item.message || item.msg;
@@ -205,11 +298,7 @@ function AddProduct() {
           }
         });
 
-        toast.error(
-          responseData.errors[0]?.message ||
-            responseData.errors[0]?.msg ||
-            "Please check the product details.",
-        );
+        toast.error("Please check the product details.");
         return;
       }
 
@@ -217,22 +306,22 @@ function AddProduct() {
         responseData?.message ||
           responseData?.error ||
           error.message ||
-          "Something went wrong. Please try again.",
+          "Something went wrong. Please try again."
       );
     } finally {
       setSaving(false);
     }
   };
 
-  // ========================================
-  // STYLES
-  // ========================================
-
   const getInputStyle = (field) => ({
     display: "block",
     width: "100%",
     minHeight:
-      field === "description" ? (isMobile ? "100px" : "120px") : "42px",
+      field === "description"
+        ? isMobile
+          ? "100px"
+          : "120px"
+        : "42px",
     padding: isMobile ? "9px" : "10px",
     boxSizing: "border-box",
     border: errors[field] ? "1px solid #dc2626" : "1px solid #ccc",
@@ -265,12 +354,11 @@ function AddProduct() {
     width: "100%",
   };
 
-  // LOADING PRODUCT
-
   if (isEditMode && loadingProduct) {
     return (
       <>
         <Navbar />
+
         <div
           style={{
             minHeight: "calc(100vh - 70px)",
@@ -288,8 +376,6 @@ function AddProduct() {
     );
   }
 
-  // FORM UI
-
   return (
     <>
       <Navbar />
@@ -298,7 +384,11 @@ function AddProduct() {
         style={{
           minHeight: "calc(100vh - 70px)",
           width: "100%",
-          padding: isMobile ? "15px" : isTablet ? "22px" : "30px",
+          padding: isMobile
+            ? "15px"
+            : isTablet
+              ? "22px"
+              : "30px",
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
@@ -337,7 +427,11 @@ function AddProduct() {
           noValidate
           style={{
             backgroundColor: "white",
-            padding: isMobile ? "18px" : isTablet ? "24px" : "30px",
+            padding: isMobile
+              ? "18px"
+              : isTablet
+                ? "24px"
+                : "30px",
             borderRadius: "10px",
             width: "100%",
             maxWidth: "500px",
@@ -346,11 +440,11 @@ function AddProduct() {
             boxShadow: "0 5px 20px rgba(0,0,0,0.15)",
           }}
         >
-          {/* PRODUCT NAME */}
           <div style={fieldStyle}>
             <label htmlFor="name" style={labelStyle}>
               Enter your product name
             </label>
+
             <input
               id="name"
               type="text"
@@ -361,6 +455,7 @@ function AddProduct() {
               style={getInputStyle("name")}
               {...register("name")}
             />
+
             {errors.name && (
               <p id="name-error" role="alert" style={errorStyle}>
                 {errors.name.message}
@@ -368,11 +463,11 @@ function AddProduct() {
             )}
           </div>
 
-          {/* PRODUCT PRICE */}
           <div style={fieldStyle}>
             <label htmlFor="price" style={labelStyle}>
               Enter your product price
             </label>
+
             <input
               id="price"
               type="number"
@@ -384,6 +479,7 @@ function AddProduct() {
               style={getInputStyle("price")}
               {...register("price")}
             />
+
             {errors.price && (
               <p id="price-error" role="alert" style={errorStyle}>
                 {errors.price.message}
@@ -391,15 +487,17 @@ function AddProduct() {
             )}
           </div>
 
-          {/* PRODUCT CATEGORY */}
           <div style={fieldStyle}>
             <label htmlFor="category" style={labelStyle}>
               Enter your product category
             </label>
+
             <select
               id="category"
               aria-invalid={Boolean(errors.category)}
-              aria-describedby={errors.category ? "category-error" : undefined}
+              aria-describedby={
+                errors.category ? "category-error" : undefined
+              }
               style={getInputStyle("category")}
               {...register("category")}
             >
@@ -407,10 +505,11 @@ function AddProduct() {
               <option value="Electronics">Electronics</option>
               <option value="Clothing">Clothing</option>
               <option value="Footwear">Footwear</option>
-              <option value="Home & Kitchen">Home &amp; Kitchen</option>
+              <option value="Home & Kitchen">Home & Kitchen</option>
               <option value="Books">Books</option>
               <option value="Accessories">Accessories</option>
             </select>
+
             {errors.category && (
               <p id="category-error" role="alert" style={errorStyle}>
                 {errors.category.message}
@@ -418,11 +517,11 @@ function AddProduct() {
             )}
           </div>
 
-          {/* PRODUCT DESCRIPTION */}
           <div style={fieldStyle}>
             <label htmlFor="description" style={labelStyle}>
               Enter your product description
             </label>
+
             <textarea
               id="description"
               placeholder="Enter product description"
@@ -434,14 +533,93 @@ function AddProduct() {
               style={getInputStyle("description")}
               {...register("description")}
             />
+
             {errors.description && (
-              <p id="description-error" role="alert" style={errorStyle}>
+              <p
+                id="description-error"
+                role="alert"
+                style={errorStyle}
+              >
                 {errors.description.message}
               </p>
             )}
           </div>
 
-          {/* SUBMIT BUTTON */}
+          <div style={fieldStyle}>
+            <label htmlFor="image" style={labelStyle}>
+              Upload Product Image
+            </label>
+
+            <input
+              id="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleImageChange}
+              style={getInputStyle("image")}
+            />
+
+            <p
+              style={{
+                fontSize: "12px",
+                color: "#777",
+                marginTop: "6px",
+              }}
+            >
+              Supported formats: JPG, PNG, WEBP. Maximum size: 10MB.
+            </p>
+
+            {previewImage && (
+              <div
+                style={{
+                  marginTop: "15px",
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  backgroundColor: "#fafafa",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    color: "#333",
+                    margin: "0 0 10px",
+                  }}
+                >
+                  {selectedImage ? "New Image Preview" : "Current Product Image"}
+                </p>
+
+                <img
+                  src={previewImage}
+                  alt="Product Preview"
+                  onError={() => {
+                    console.error("Unable to load product image:", previewImage);
+                  }}
+                  style={{
+                    width: "150px",
+                    height: "150px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
+                    display: "block",
+                  }}
+                />
+
+                {selectedImage && (
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      color: "#16a34a",
+                      marginTop: "8px",
+                    }}
+                  >
+                    New image selected successfully.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             type="submit"
             disabled={saving || isSubmitting}
@@ -449,12 +627,14 @@ function AddProduct() {
               minHeight: "48px",
               width: "100%",
               padding: "12px",
-              backgroundColor: saving || isSubmitting ? "#999" : "#e4250f",
+              backgroundColor:
+                saving || isSubmitting ? "#999" : "#e4250f",
               border: "none",
               color: "white",
               fontSize: "16px",
               fontWeight: "600",
-              cursor: saving || isSubmitting ? "not-allowed" : "pointer",
+              cursor:
+                saving || isSubmitting ? "not-allowed" : "pointer",
               borderRadius: "5px",
               boxSizing: "border-box",
             }}

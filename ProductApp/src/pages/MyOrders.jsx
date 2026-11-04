@@ -9,6 +9,44 @@ function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [imageErrors, setImageErrors] = useState({});
+
+  const BACKEND_URL = (
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api"
+  ).replace(/\/api\/?$/, "");
+
+  
+  const getImageUrl = (image) => {
+    if (!image || typeof image !== "string") return "";
+
+    const value = image.trim();
+    if (!value) return "";
+
+    if (/^https?:\/\//i.test(value)) return value;
+
+    const normalizedPath = value.replace(/\\/g, "/").replace(/^\/+/, "");
+    const uploadsIndex = normalizedPath.toLowerCase().lastIndexOf("uploads/");
+
+    // If the saved value contains an absolute folder path, keep only uploads/...
+    const relativePath = uploadsIndex >= 0
+      ? normalizedPath.slice(uploadsIndex)
+      : `uploads/${normalizedPath.split("/").pop()}`;
+
+    return `${BACKEND_URL}/${relativePath
+      .split("/")
+      .map((part) => encodeURIComponent(part))
+      .join("/")}`;
+  };
+
+  const getOrderItemImage = (item) => {
+    // New orders should have item.image. The other fields support older API shapes.
+    const image =
+      item?.image ||
+      item?.productImage ||
+      (typeof item?.productId === "object" ? item.productId?.image : "");
+
+    return getImageUrl(image);
+  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -158,7 +196,28 @@ function MyOrders() {
                         className="ordered-item"
                         key={`${item.productId}-${index}`}
                       >
-                        
+                        <div className="ordered-item-image">
+                          {getOrderItemImage(item) &&
+                          !imageErrors[`${order._id}-${item.productId?._id || item.productId}-${index}`] ? (
+                            <img
+                              src={getOrderItemImage(item)}
+                              alt={item.name || "Ordered product"}
+                              loading="lazy"
+                              onError={(event) => {
+                                console.error("Order product image failed to load:", {
+                                  savedImage: item.image,
+                                  imageUrl: event.currentTarget.src,
+                                });
+                                setImageErrors((previous) => ({
+                                  ...previous,
+                                  [`${order._id}-${item.productId?._id || item.productId}-${index}`]: true,
+                                }));
+                              }}
+                            />
+                          ) : (
+                            <span aria-label="Product image unavailable">📦</span>
+                          )}
+                        </div>
 
                         <div className="ordered-item-info">
                           <h4>{item.name}</h4>
@@ -249,7 +308,7 @@ function MyOrders() {
         .my-orders-page {
           min-height: 100vh;
           padding: 36px 20px 60px;
-          background: #f5f7f8;
+          background: #FFFAF8;
         }
 
         .my-orders-container {
@@ -267,7 +326,7 @@ function MyOrders() {
         }
 
         .orders-eyebrow {
-          color: #198754;
+          color: #B95F43;
           font-size: 12px;
           font-weight: 800;
           letter-spacing: 2px;
@@ -275,13 +334,13 @@ function MyOrders() {
 
         .my-orders-header h1 {
           margin: 8px 0;
-          color: #17202a;
+          color: #30231F;
           font-size: 34px;
         }
 
         .my-orders-header p {
           margin: 0;
-          color: #737b78;
+          color: #66534D;
           line-height: 1.6;
         }
 
@@ -289,15 +348,17 @@ function MyOrders() {
           display: inline-block;
           padding: 12px 18px;
           border-radius: 8px;
-          background: #198754;
+          background: #B95F43;
           color: white;
           text-decoration: none;
           font-weight: 700;
           font-size: 13px;
+          transition: background 0.2s ease, transform 0.2s ease;
         }
 
         .continue-shopping:hover {
-          background: #157347;
+          background: #9F4D35;
+          transform: translateY(-1px);
         }
 
         .orders-list {
@@ -307,11 +368,11 @@ function MyOrders() {
         }
 
         .order-card {
-          background: white;
-          border: 1px solid #e4e9e6;
-          border-radius: 14px;
+          background: #FFFFFF;
+          border: 1px solid #F0E3DD;
+          border-radius: 16px;
           overflow: hidden;
-          box-shadow: 0 4px 18px rgba(0,0,0,.04);
+          box-shadow: 0 8px 28px rgba(75, 43, 31, 0.06);
         }
 
         .order-card-header {
@@ -320,8 +381,8 @@ function MyOrders() {
           align-items: center;
           gap: 15px;
           padding: 22px 25px;
-          background: #fafcfb;
-          border-bottom: 1px solid #e9eeeb;
+          background: #FFF5F0;
+          border-bottom: 1px solid #F0E3DD;
         }
 
         .order-reference {
@@ -333,45 +394,45 @@ function MyOrders() {
 
         .order-reference span,
         .order-detail span {
-          color: #858d89;
+          color: #927E75;
           font-size: 11px;
           text-transform: uppercase;
           letter-spacing: .6px;
         }
 
         .order-reference strong {
-          color: #17202a;
+          color: #30231F;
           font-size: 15px;
         }
 
         .order-reference small {
-          color: #858d89;
+          color: #927E75;
           font-size: 12px;
         }
 
         .order-status {
           padding: 7px 12px;
           border-radius: 20px;
-          background: #eaf7f0;
-          color: #198754;
+          background: #FCECE5;
+          color: #B95F43;
           font-size: 12px;
           font-weight: 800;
           white-space: nowrap;
         }
 
         .status-cancelled {
-          background: #fff0f0;
-          color: #c0392b;
+          background: #FFF0ED;
+          color: #B42318;
         }
 
         .status-shipped {
-          background: #edf3ff;
-          color: #2855a6;
+          background: #F0F1F8;
+          color: #48558A;
         }
 
         .status-delivered {
-          background: #e5f7ed;
-          color: #187344;
+          background: #FCECE5;
+          color: #9F4D35;
         }
 
         .ordered-items {
@@ -382,7 +443,7 @@ function MyOrders() {
         .order-address h3 {
           margin: 0 0 15px;
           font-size: 16px;
-          color: #202725;
+          color: #30231F;
         }
 
         .ordered-item {
@@ -390,7 +451,7 @@ function MyOrders() {
           align-items: center;
           gap: 16px;
           padding: 16px 0;
-          border-bottom: 1px solid #edf0ee;
+          border-bottom: 1px solid #F2E9E4;
         }
 
         .ordered-item:last-child {
@@ -405,9 +466,9 @@ function MyOrders() {
           width: 85px;
           height: 85px;
           overflow: hidden;
-          border-radius: 9px;
-          border: 1px solid #e7ebe8;
-          background: #f4f6f5;
+          border-radius: 12px;
+          border: 1px solid #EADBD3;
+          background: #FFF5F0;
           font-size: 28px;
         }
 
@@ -415,6 +476,7 @@ function MyOrders() {
           width: 100%;
           height: 100%;
           object-fit: contain;
+          display: block;
         }
 
         .ordered-item-info {
@@ -424,7 +486,7 @@ function MyOrders() {
 
         .ordered-item-info h4 {
           margin: 0 0 6px;
-          color: #202725;
+          color: #30231F;
           font-size: 15px;
           overflow-wrap: anywhere;
         }
@@ -432,18 +494,18 @@ function MyOrders() {
         .ordered-category {
           display: inline-block;
           margin-bottom: 7px;
-          color: #6b7771;
+          color: #8B746A;
           font-size: 11px;
         }
 
         .ordered-item-info p {
           margin: 3px 0;
-          color: #737b78;
+          color: #66534D;
           font-size: 12px;
         }
 
         .ordered-subtotal {
-          color: #198754;
+          color: #B95F43;
           font-size: 14px;
           white-space: nowrap;
         }
@@ -454,8 +516,8 @@ function MyOrders() {
           gap: 18px;
           margin: 10px 25px 0;
           padding: 20px 0;
-          border-top: 1px solid #edf0ee;
-          border-bottom: 1px solid #edf0ee;
+          border-top: 1px solid #F2E9E4;
+          border-bottom: 1px solid #F2E9E4;
         }
 
         .order-detail {
@@ -466,7 +528,7 @@ function MyOrders() {
         }
 
         .order-detail strong {
-          color: #29332e;
+          color: #49362E;
           font-size: 13px;
           overflow-wrap: anywhere;
         }
@@ -477,14 +539,14 @@ function MyOrders() {
 
         .order-address p {
           margin: 6px 0;
-          color: #737b78;
+          color: #66534D;
           font-size: 13px;
           line-height: 1.6;
           overflow-wrap: anywhere;
         }
 
         .order-address strong {
-          color: #29332e;
+          color: #49362E;
         }
 
         .order-total {
@@ -494,18 +556,18 @@ function MyOrders() {
           gap: 15px;
           margin-top: 20px;
           padding: 20px 25px;
-          background: #f8faf9;
-          border-top: 1px solid #e9eeeb;
+          background: #FFF5F0;
+          border-top: 1px solid #F0E3DD;
         }
 
         .order-total span {
-          color: #29332e;
+          color: #49362E;
           font-size: 15px;
           font-weight: 700;
         }
 
         .order-total strong {
-          color: #198754;
+          color: #B95F43;
           font-size: 22px;
         }
 
@@ -513,8 +575,8 @@ function MyOrders() {
         .orders-empty {
           padding: 45px 20px;
           text-align: center;
-          background: white;
-          border: 1px solid #e4e9e6;
+          background: #FFFFFF;
+          border: 1px solid #F0E3DD;
           border-radius: 14px;
         }
 
@@ -529,12 +591,12 @@ function MyOrders() {
 
         .orders-empty h2 {
           margin: 0 0 8px;
-          color: #17202a;
+          color: #30231F;
         }
 
         .orders-empty p {
           margin-bottom: 22px;
-          color: #737b78;
+          color: #66534D;
           line-height: 1.6;
         }
 
