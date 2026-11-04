@@ -14,6 +14,7 @@ function Navbar() {
 
   try {
     const savedUser = localStorage.getItem("user");
+
     if (savedUser) {
       user = JSON.parse(savedUser);
     }
@@ -28,15 +29,21 @@ function Navbar() {
 
   const closeMenu = () => setMenuOpen(false);
 
+  // Logout confirmation
   const handleLogoutClick = () => {
     closeMenu();
     setShowLogoutModal(true);
   };
 
+  // Confirm logout
   const handleConfirmLogout = () => {
+    // Remove authentication details
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
     localStorage.removeItem("userId");
+
+    // Clear previous user's cart
+    localStorage.removeItem("cart");
 
     setShowLogoutModal(false);
     setMenuOpen(false);
@@ -48,6 +55,7 @@ function Navbar() {
     navigate("/");
   };
 
+  // Navigate to login
   const handleLogin = () => {
     closeMenu();
     navigate("/login");
@@ -58,13 +66,16 @@ function Navbar() {
       <nav className="main-navbar">
         <div className="navbar-container">
 
-         
+          {/* Logo */}
           <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          PRODUCT <span>HUB.</span>
+            PRODUCT <span>HUB.</span>
           </Link>
 
           {/* Desktop / Mobile Navigation */}
-          <div className={`navbar-menu ${menuOpen ? "active" : ""}`}>
+          <div
+            id="navbar-links"
+            className={`navbar-menu ${menuOpen ? "active" : ""}`}
+          >
             <Link to="/" className="nav-link" onClick={closeMenu}>
               Home
             </Link>
@@ -73,6 +84,7 @@ function Navbar() {
               Products
             </Link>
 
+            {/* My Orders - Logged-in users only */}
             {isLoggedIn && (
               <Link
                 to="/my-orders"
@@ -83,6 +95,7 @@ function Navbar() {
               </Link>
             )}
 
+            {/* Seller Navigation */}
             {isSeller && (
               <>
                 <Link
@@ -103,9 +116,16 @@ function Navbar() {
               </>
             )}
 
-            <Link to="/cart" className="nav-link" onClick={closeMenu}>
-              Cart
-            </Link>
+            {/* Cart - Logged-in users only */}
+            {isLoggedIn && (
+              <Link
+                to="/cart"
+                className="nav-link"
+                onClick={closeMenu}
+              >
+                Cart
+              </Link>
+            )}
 
             {/* Login / Logout */}
             {isLoggedIn ? (
@@ -129,7 +149,11 @@ function Navbar() {
           <button
             className={`menu-toggle ${menuOpen ? "open" : ""}`}
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-label={
+              menuOpen
+                ? "Close navigation menu"
+                : "Open navigation menu"
+            }
             aria-expanded={menuOpen}
             aria-controls="navbar-links"
           >
@@ -350,6 +374,7 @@ function Navbar() {
             opacity: 0;
             transform: translateY(12px);
           }
+
           to {
             opacity: 1;
             transform: translateY(0);
