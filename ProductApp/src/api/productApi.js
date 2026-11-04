@@ -17,12 +17,6 @@ const getAuthConfig = () => {
 };
 
 // GET ALL PRODUCTS
-//
-// PUBLIC API
-//
-// Logged out -> products visible
-// User       -> products visible
-// Seller     -> backend can hide own products
 
 export const getProducts = async (page = 1, limit = 8) => {
   try {
@@ -41,10 +35,6 @@ export const getProducts = async (page = 1, limit = 8) => {
 };
 
 // GET SINGLE PRODUCT
-//
-// PUBLIC API
-//
-// No login required
 
 export const getProduct = async (id) => {
   try {
@@ -66,8 +56,6 @@ export const getProduct = async (id) => {
 
 // ADD PRODUCT
 
-// LOGIN REQUIRED
-
 export const addProduct = async (productData) => {
   try {
     const response = await api.post(
@@ -88,7 +76,6 @@ export const addProduct = async (productData) => {
 
 // UPDATE PRODUCT
 
-// LOGIN REQUIRED
 
 export const updateProduct = async (id, productData) => {
   try {
@@ -116,8 +103,6 @@ export const updateProduct = async (id, productData) => {
 };
 
 // DELETE PRODUCT
-
-// LOGIN REQUIRED
 
 export const deleteProduct = async (id) => {
   try {
