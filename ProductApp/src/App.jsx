@@ -9,18 +9,18 @@ import {
 
 import { useState } from "react";
 
-import Home from "./pages/home";
-import AddProduct from "./pages/Addproduct";
-import Products from "./pages/products";
-import EachItem from "./pages/eachItem";
-import Login from "./pages/login";
-import Signup from "./pages/Signup";
-import SellerDashboard from "./pages/sellerdash";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import NotFound from "./components/NotFound";
-import MyOrders from "./pages/MyOrders";
-import SellerOrders from "./pages/SellerOrders";
+import Home from "./pages/home.jsx";
+import AddProduct from "./pages/Addproduct.jsx";
+import Products from "./pages/products.jsx";
+import EachItem from "./pages/eachItem.jsx";
+import Login from "./pages/login.jsx";
+import Signup from "./pages/Signup.jsx";
+import SellerDashboard from "./pages/sellerdash.jsx";
+import Cart from "./pages/Cart.jsx";
+import Checkout from "./pages/Checkout.jsx";
+import NotFound from "./components/NotFound.jsx";
+import MyOrders from "./pages/MyOrders.jsx";
+import SellerOrders from "./pages/SellerOrders.jsx";
 
 function App() {
   const [products, setProducts] = useState([]);
